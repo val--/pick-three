@@ -1,0 +1,154 @@
+/**
+ * Key-aware figures: a FigureSpec describes what a diagram shows (relative
+ * to the chosen root note), and buildFigure turns it into concrete voicings.
+ * Used by the generator (default rendering in C) AND by the browser
+ * (recomputed when the user picks another root).
+ */
+import { Note, noteAbove, noteName, pitchClass } from './theory/notes.js';
+import { DEGREES, triad, Triad, TriadQuality, QUALITY_SUFFIX } from './theory/triads.js';
+import {
+  FrettedNote,
+  inversionsAlongNeck,
+  STANDARD_TUNING,
+  StringSet,
+  stringSetLabel,
+  Voicing,
+  voicingsForInversion,
+} from './fretboard/fretboard.js';
+
+export const INV_SHORT = ['root position', '1st inversion', '2nd inversion'] as const;
+
+/** String sets from low to high — we start from the low E string. */
+export const ALL_SETS: StringSet[] = [
+  [6, 5, 4],
+  [5, 4, 3],
+  [4, 3, 2],
+  [3, 2, 1],
+];
+
+/**
+ * A chord defined relative to the chosen root: `steps` letter-degrees and
+ * `semis` semitones above it (correct spelling guaranteed).
+ */
+export interface ChordRef {
+  steps: number;
+  semis: number;
+  quality: TriadQuality;
+}
+
+export const KEY_MAJOR: ChordRef = { steps: 0, semis: 0, quality: 'major' };
+export const KEY_MINOR: ChordRef = { steps: 0, semis: 0, quality: 'minor' };
+/** The vi degree: the relative minor (Am when the root is C). */
+export const RELATIVE_MINOR: ChordRef = { steps: 5, semis: 9, quality: 'minor' };
+
+export type FigureSpec =
+  | { kind: 'single'; chord: ChordRef; set: StringSet; inversion: 0 | 1 | 2 }
+  | { kind: 'acrossSets'; chord: ChordRef; inversion: 0 | 1 | 2 }
+  | { kind: 'alongNeck'; chord: ChordRef; set: StringSet; fromFret?: number }
+  | { kind: 'progression'; chords: ChordRef[]; set: StringSet; startFret: number }
+  | { kind: 'openChords'; chords: ChordRef[] };
+
+export interface FigureDiagram {
+  voicing: Voicing;
+  title: string;
+}
+
+export function chordName(t: Triad): string {
+  return noteName(t.root) + QUALITY_SUFFIX[t.quality];
+}
+
+function diagramTitle(v: Voicing): string {
+  return `${chordName(v.triad)} · ${INV_SHORT[v.inversion]}`;
+}
+
+function chordOf(root: Note, ref: ChordRef): Triad {
+  return triad(noteAbove(root, ref.steps, ref.semis), ref.quality);
+}
+
+/** The voicing closest to a reference fret — used for voice leading. */
+function nearestVoicing(t: Triad, set: StringSet, refFret: number): Voicing {
+  const all = ([0, 1, 2] as const).flatMap(inv => voicingsForInversion(t, set, inv));
+  return all.sort(
+    (a, b) => Math.abs(a.minFret - refFret) - Math.abs(b.minFret - refFret),
+  )[0];
+}
+
+/**
+ * Standard open chords: frets per string, from string 6 to 1 (-1 = muted).
+ * Triads keep their degrees here — an open chord is just the triad with
+ * doubled notes.
+ */
+const OPEN_SHAPES: { quality: TriadQuality; rootPc: number; frets: number[] }[] = [
+  { quality: 'major', rootPc: 0, frets: [-1, 3, 2, 0, 1, 0] },   // C
+  { quality: 'major', rootPc: 2, frets: [-1, -1, 0, 2, 3, 2] },  // D
+  { quality: 'major', rootPc: 4, frets: [0, 2, 2, 1, 0, 0] },    // E
+  { quality: 'major', rootPc: 7, frets: [3, 2, 0, 0, 0, 3] },    // G
+  { quality: 'major', rootPc: 9, frets: [-1, 0, 2, 2, 2, 0] },   // A
+  { quality: 'minor', rootPc: 2, frets: [-1, -1, 0, 2, 3, 1] },  // Dm
+  { quality: 'minor', rootPc: 4, frets: [0, 2, 2, 0, 0, 0] },    // Em
+  { quality: 'minor', rootPc: 9, frets: [-1, 0, 2, 2, 1, 0] },   // Am
+];
+
+/** This triad's standard open chord, if one exists. */
+export function openChordVoicing(t: Triad): Voicing | null {
+  const shape = OPEN_SHAPES.find(
+    s => s.quality === t.quality && s.rootPc === pitchClass(t.root),
+  );
+  if (!shape) return null;
+
+  const notes: FrettedNote[] = [];
+  shape.frets.forEach((fret, i) => {
+    if (fret < 0) return;
+    const string = 6 - i;
+    const midi = STANDARD_TUNING.midi[string] + fret;
+    const idx = t.notes.findIndex(n => pitchClass(n) === midi % 12);
+    notes.push({ string, fret, midi, note: t.notes[idx], degree: DEGREES[idx] });
+  });
+  const frets = notes.map(n => n.fret);
+  const inversion = DEGREES.indexOf(notes[0].degree) as 0 | 1 | 2;
+  return {
+    triad: t,
+    stringSet: [6, 5, 4], // not meaningful for a full chord
+    inversion,
+    notes,
+    minFret: Math.min(...frets),
+    maxFret: Math.max(...frets),
+  };
+}
+
+export function buildFigure(spec: FigureSpec, root: Note): FigureDiagram[] {
+  switch (spec.kind) {
+    case 'single': {
+      const t = chordOf(root, spec.chord);
+      const v = voicingsForInversion(t, spec.set, spec.inversion)[0];
+      return v ? [{ voicing: v, title: `${chordName(t)} · ${stringSetLabel(spec.set)}` }] : [];
+    }
+    case 'acrossSets': {
+      const t = chordOf(root, spec.chord);
+      return ALL_SETS.flatMap(set => {
+        const v = voicingsForInversion(t, set, spec.inversion)[0];
+        return v ? [{ voicing: v, title: `${chordName(t)} · ${stringSetLabel(set)}` }] : [];
+      });
+    }
+    case 'alongNeck': {
+      const t = chordOf(root, spec.chord);
+      return inversionsAlongNeck(t, spec.set, { fromFret: spec.fromFret ?? 0 })
+        .map(v => ({ voicing: v, title: diagramTitle(v) }));
+    }
+    case 'progression': {
+      let ref = spec.startFret;
+      return spec.chords.map(cr => {
+        const v = nearestVoicing(chordOf(root, cr), spec.set, ref);
+        ref = v.minFret;
+        return { voicing: v, title: diagramTitle(v) };
+      });
+    }
+    case 'openChords': {
+      return spec.chords.flatMap(cr => {
+        const t = chordOf(root, cr);
+        const v = openChordVoicing(t);
+        return v ? [{ voicing: v, title: `${chordName(t)} · open chord` }] : [];
+      });
+    }
+  }
+}

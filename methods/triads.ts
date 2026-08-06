@@ -1,0 +1,395 @@
+import { noteName, parseNote } from '../src/theory/notes.js';
+import { triad } from '../src/theory/triads.js';
+import { StringSet } from '../src/fretboard/fretboard.js';
+import { Block, Method } from '../src/render/html.js';
+import {
+  buildFigure,
+  FigureSpec,
+  KEY_MAJOR,
+  RELATIVE_MINOR,
+} from '../src/figures.js';
+
+/* ---------- Content helpers ---------- */
+
+/** Reference key of the static rendering (PDF and site before selection). */
+const DEFAULT_ROOT = parseNote('C');
+
+/** Diagram row the site can recompute for the chosen root note. */
+function keyedRow(spec: FigureSpec, extra: { title?: string; caption?: string } = {}): Block {
+  return { kind: 'diagramRow', spec, diagrams: buildFigure(spec, DEFAULT_ROOT), ...extra };
+}
+
+/** Neck map the site can recompute for the chosen root note. */
+function keyedMap(spec: FigureSpec, extra: { title?: string; caption?: string } = {}): Block {
+  return {
+    kind: 'neckMap',
+    spec,
+    voicings: buildFigure(spec, DEFAULT_ROOT).map(d => d.voicing),
+    ...extra,
+  };
+}
+
+/* ---------- Generated appendix: the 12 keys ---------- */
+
+const CHROMATIC_ROOTS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+function allKeysTable(): string {
+  const rows = CHROMATIC_ROOTS.map(r => {
+    const root = parseNote(r);
+    const maj = triad(root, 'major');
+    const min = triad(root, 'minor');
+    return `<tr>
+      <td><strong>${noteName(root)}</strong></td>
+      <td>${maj.notes.map(noteName).join(' – ')}</td>
+      <td>${min.notes.map(noteName).join(' – ')}</td>
+    </tr>`;
+  }).join('\n');
+  return `<table>
+    <thead><tr><th>Root</th><th>Major triad (R · 3 · 5)</th><th>Minor triad (R · ♭3 · 5)</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+/* ---------- The method ---------- */
+
+const SET_654: StringSet = [6, 5, 4];
+const SET_123: StringSet = [3, 2, 1];
+
+/** I – V – vi – IV, relative to the chosen root. */
+const PROG_1564 = [
+  KEY_MAJOR,
+  { steps: 4, semis: 7, quality: 'major' as const },
+  RELATIVE_MINOR,
+  { steps: 3, semis: 5, quality: 'major' as const },
+];
+
+export const triadsMethod: Method = {
+  title: 'Triads on the Guitar',
+  subtitle: 'R · 3 · 5: root position and its inversions, all over the neck',
+  volume: 'Volume 1 · From the low E string to the high E',
+  chapters: [
+    /* ---------------- Chapter 1 ---------------- */
+    {
+      title: 'What is a triad?',
+      intro:
+        'Before putting fingers on the neck, let’s take five minutes to understand what we are about to play.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>A <strong>triad</strong> is a three-note chord, built by stacking two thirds above
+            a starting note called the <strong>root</strong> (written <strong>R</strong> in every
+            diagram of this method). It is the basic building block of harmony: nearly every chord you
+            know — open, barred, extended — has a triad at its core.</p>
+          <p>From the same root, the quality of the stacked thirds produces four species:</p>
+          <table>
+            <thead><tr><th>Species</th><th>Formula</th><th>Example on C</th><th>Symbol</th></tr></thead>
+            <tbody>
+              <tr><td>Major</td><td>R · 3 · 5</td><td>C – E – G</td><td>C</td></tr>
+              <tr><td>Minor</td><td>R · ♭3 · 5</td><td>C – E♭ – G</td><td>Cm</td></tr>
+              <tr><td>Diminished</td><td>R · ♭3 · ♭5</td><td>C – E♭ – G♭</td><td>C°</td></tr>
+              <tr><td>Augmented</td><td>R · 3 · ♯5</td><td>C – E – G♯</td><td>C+</td></tr>
+            </tbody>
+          </table>
+          <p>This volume focuses on the two most common species: <strong>major</strong> and
+            <strong>minor</strong>.</p>
+          <h3>Root position and inversions</h3>
+          <p>The three notes of a triad can be stacked in any order. Depending on which note sits at
+            the bottom, we speak of:</p>
+          <ul>
+            <li><strong>root position</strong> — R at the bottom, the natural stack
+              <strong>R · 3 · 5</strong>;</li>
+            <li><strong>1st inversion</strong> — the third at the bottom (3 · 5 · R);</li>
+            <li><strong>2nd inversion</strong> — the fifth at the bottom (5 · R · 3).</li>
+          </ul>
+          <p>That is also the study plan of this method: <strong>master root position on every string
+            set first</strong>, starting from the low E string, then add the first inversion, then the
+            second. By the end of the volume you will be able to play any triad in three places on
+            each string set — in other words, everywhere.</p>`,
+        },
+        {
+          kind: 'legend',
+        },
+        keyedRow(
+          { kind: 'single', chord: KEY_MAJOR, set: SET_654, inversion: 0 },
+          {
+            title: 'First look: the major triad in root position, starting from the low E',
+            caption:
+              'R on the low E string (in C: fret 8), with the third and the fifth built above it: R · 3 · 5. The symbol in each dot is the degree; note names sit below the diagram.',
+          },
+        ),
+        keyedRow(
+          { kind: 'openChords', chords: [KEY_MAJOR] },
+          {
+            title: 'You already know it: the open chord',
+            caption:
+              'The “open” chord you have played since day one contains exactly these three notes — R, the third and the fifth, some of them simply doubled. A triad is not a new chord: it is the heart of the ones you already know. (This figure only appears in keys that have an open chord: C, D, E, G, A and their minors Dm, Em, Am.)',
+          },
+        ),
+        {
+          kind: 'tip',
+          html: `<p>Every diagram in this method uses the same color code:
+            <strong style="color:#c0392b">root (R) in red</strong>,
+            <strong style="color:#2874a6">third in blue</strong>,
+            <strong style="color:#839192">fifth in gray</strong>.
+            Always find the root first: it is the note that names the chord.</p>`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 2 ---------------- */
+    {
+      title: 'Root position (R · 3 · 5) on every string set',
+      intro:
+        'One single idea in this chapter: start from the root, under your finger, and build R · 3 · 5 above it — on all four string sets, from the low E upward.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>Root position is the most important of the three: it is the one that directly
+            links the <em>name</em> of a chord to a <em>place</em> on the neck. Find your root on the
+            low E string (a C: fret 8) and the triad builds itself above it. The same reasoning works
+            on every group of three adjacent strings.</p>
+          <p>Watch out when crossing string 2: the major third between strings 3 and 2 (the only one
+            in standard tuning) shifts every note on strings 2 and 1 up by one fret. So the
+            <em>shape</em> changes slightly from one string set to the next — but the
+            <strong>R · 3 · 5</strong> order never does.</p>`,
+        },
+        keyedMap(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 0 },
+          {
+            title: 'The major triad in root position, on all four string sets',
+            caption:
+              'The same triad, four stories high, from strings 6-5-4 to strings 3-2-1. Find the red dot first: R is always the lowest note of the shape.',
+          },
+        ),
+        keyedRow(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 0 },
+          { title: 'The four shapes in detail, from low to high' },
+        ),
+        {
+          kind: 'exercise',
+          title: 'R · 3 · 5 on all four stories',
+          html: `<ol>
+            <li>Play the four shapes above in order, starting from strings 6-5-4. Before strumming,
+              put your finger on the root first and name it.</li>
+            <li>Play each shape <em>as an arpeggio</em>, low to high, naming the degrees:
+              “root… third… fifth…”.</li>
+            <li>With a metronome (60 BPM), one shape per bar, in a loop: 6-5-4 → 5-4-3 → 4-3-2 →
+              3-2-1, then back down.</li>
+          </ol>`,
+        },
+        keyedRow(
+          { kind: 'acrossSets', chord: RELATIVE_MINOR, inversion: 0 },
+          {
+            title: 'The minor version, on all four string sets',
+            caption:
+              'Same logic, lowered third: R · ♭3 · 5. The diagrams show the relative minor of the chosen key (Am when working in C).',
+          },
+        ),
+        keyedRow(
+          { kind: 'openChords', chords: [KEY_MAJOR, RELATIVE_MINOR] },
+          {
+            title: 'The link with open chords',
+            caption:
+              'When the key allows it, the open chord exists: find R, 3 and 5 in it, in the same color code. Every string doubles one of the triad’s three notes — nothing more.',
+          },
+        ),
+        {
+          kind: 'exercise',
+          title: 'Major ↔ minor in root position',
+          html: `<ol>
+            <li>On each string set, play the major triad then its minor version: only the third
+              (blue dot) moves back one fret. Name the note that moves (in C: E → E♭).</li>
+            <li>Do the same from the minor triad: Am → A → Am.</li>
+            <li>Pick another root on the low E string (G, fret 3; A, fret 5; B♭, fret 6…) and
+              rebuild R · 3 · 5 on all four string sets.</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p><strong>“Minor = the third moves back one fret.”</strong> This reflex works on
+            every string set, every inversion and every key. Remember the move, not just the
+            shapes.</p>`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 3 ---------------- */
+    {
+      title: 'The first inversion (3 · 5 · R)',
+      intro:
+        'Root position in place? Now flip it: the third moves to the bottom, the root rises to the top.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>In the <strong>first inversion</strong>, the stack becomes
+            <strong>3 · 5 · R</strong>: third at the bottom, root at the top. The red dot moves to
+            another story — but it is still the note that names the chord. Learn to spot it
+            <em>at the top</em> of the shape.</p>
+          <p>On the neck, the first inversion of a triad always sits <em>above</em> its root
+            position (or below it, one octave down).</p>`,
+        },
+        keyedMap(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 1 },
+          { title: 'The major triad in first inversion, on all four string sets' },
+        ),
+        keyedRow(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 1 },
+          { title: 'The four shapes, from low to high' },
+        ),
+        keyedRow(
+          { kind: 'acrossSets', chord: RELATIVE_MINOR, inversion: 1 },
+          { title: 'The minor version in first inversion' },
+        ),
+        {
+          kind: 'exercise',
+          title: 'Root position, then first inversion',
+          html: `<ol>
+            <li>On strings 6-5-4: play the major triad in root position, then its first inversion
+              higher up the neck. Arpeggiate each one, naming the degrees: “R 3 5”, then
+              “3 5 R”.</li>
+            <li>Repeat on the other three string sets, always in that order:
+              root position → first inversion.</li>
+            <li>Do the same with the minor version, then in another key of your choice.</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p>To the ear, the first inversion sounds <em>lighter</em>, less conclusive than
+            root position: the bass is not playing the note that names the chord. Arrangers use it
+            to make the bass line <em>walk</em> smoothly.</p>`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 4 ---------------- */
+    {
+      title: 'The second inversion (5 · R · 3)',
+      intro:
+        'The last piece of the puzzle: the fifth at the bottom. After this chapter, every triad has three addresses on each string set.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>In the <strong>second inversion</strong>, the stack becomes
+            <strong>5 · R · 3</strong>: fifth at the bottom, root in the middle. It is often the most
+            compact shape of the three — and the one hiding at the top of the open chords you
+            already know.</p>`,
+        },
+        keyedMap(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 2 },
+          { title: 'The major triad in second inversion, on all four string sets' },
+        ),
+        keyedRow(
+          { kind: 'acrossSets', chord: KEY_MAJOR, inversion: 2 },
+          { title: 'The four shapes, from low to high' },
+        ),
+        keyedRow(
+          { kind: 'acrossSets', chord: RELATIVE_MINOR, inversion: 2 },
+          { title: 'The minor version in second inversion' },
+        ),
+        keyedRow(
+          { kind: 'openChords', chords: [KEY_MAJOR] },
+          {
+            title: 'The second inversion hides in the open chord',
+            caption:
+              'Look at the top of the open chord: in C, strings 3-2-1 (G – C – E) form precisely the second inversion — fifth at the bottom, R in the middle, third on top. You have been playing it all along.',
+          },
+        ),
+        {
+          kind: 'exercise',
+          title: 'The three stacks, in order',
+          html: `<ol>
+            <li>On each string set, play the major triad through its three successive stacks:
+              <strong>R · 3 · 5</strong> → <strong>3 · 5 · R</strong> →
+              <strong>5 · R · 3</strong>, arpeggiating and naming the degrees.</li>
+            <li>For each shape, say out loud where the root sits: “at the bottom”,
+              “at the top”, “in the middle”.</li>
+            <li>Do the same with the minor version, then in two other keys.</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p>A mnemonic: the root <em>steps down</em> one story with each inversion — bottom
+            (root position), top (1st), middle (2nd). If you always know where R is, you will never
+            get lost.</p>`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 5 ---------------- */
+    {
+      title: 'Connecting: the inversions along the neck',
+      intro:
+        'You now know the three stacks on every string set. What remains is to connect them: that is where the whole neck opens up.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>On a single string set, the three inversions follow one another along the neck,
+            always in the same cyclic order: root position → 1st → 2nd → root position (an octave
+            higher). Each shape starts where the previous one ends: neighboring shapes share
+            notes.</p>`,
+        },
+        keyedMap(
+          { kind: 'alongNeck', chord: KEY_MAJOR, set: SET_654 },
+          {
+            title: 'The major triad along the neck, strings 6-5-4',
+            caption:
+              'The three inversions chained going up (in C: 2nd inversion frets 2-3, root position frets 5-8, 1st inversion frets 10-12).',
+          },
+        ),
+        keyedRow(
+          { kind: 'alongNeck', chord: KEY_MAJOR, set: SET_654 },
+          { title: 'The three shapes in detail' },
+        ),
+        {
+          kind: 'exercise',
+          title: 'Climb the neck without leaving it',
+          html: `<ol>
+            <li>On strings 6-5-4, chain the three shapes going up, then coming down, naming each
+              inversion out loud.</li>
+            <li>Same work on strings 3-2-1.</li>
+            <li>With a metronome (60 BPM), one shape per bar, without breaking the pulse.</li>
+          </ol>`,
+        },
+        {
+          kind: 'html',
+          html: `<h3>Application: the I–V–vi–IV progression</h3>
+          <p>Hundreds of songs run on four chords. In C major, the <strong>I–V–vi–IV</strong>
+            progression gives <strong>C – G – Am – F</strong>. A beginner plays it with open chords
+            and big jumps of the hand. You will instead pick, for each chord, the inversion
+            <em>closest</em> to the previous one: that is <strong>voice leading</strong>.</p>`,
+        },
+        keyedRow(
+          { kind: 'progression', chords: PROG_1564, set: SET_123, startFret: 3 },
+          {
+            title: 'I – V – vi – IV around a single position, strings 3-2-1',
+            caption:
+              'Four chords, one position: no shape strays more than one fret away. The common notes (dots in the same spot) do not move. In C: C – G – Am – F.',
+          },
+        ),
+        {
+          kind: 'exercise',
+          title: 'The progression, every which way',
+          html: `<ol>
+            <li>Play the progression above, two beats per chord, with a metronome (60 then 80 BPM).</li>
+            <li>Play the same progression on strings 6-5-4, starting from the I in root
+              position.</li>
+            <li>Transpose to another key (in G: G – D – Em – C, around fret 3).</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p>The reflex to build: whenever the chord changes, ask yourself
+            <strong>“which note is common?”</strong> and keep it under your finger. Voice leading is
+            nothing but well-understood laziness.</p>`,
+        },
+        {
+          kind: 'html',
+          html: `<h3>Appendix · The twelve keys</h3>
+          <p>Every major and minor triad, spelled out. Use this table to check your transpositions —
+            then put it away: the neck should become your only reference.</p>
+          ${allKeysTable()}`,
+        },
+      ],
+    },
+  ],
+};
