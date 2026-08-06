@@ -1,6 +1,5 @@
 import { Chapter, Method, renderBlock } from './html.js';
 import { faviconDataUri, pickMark } from './logo.js';
-import { degreeLegendSVG } from './svg.js';
 
 const SITE_NAME = 'Pick Three';
 const BRAND_HTML = `Pick <span class="accent">Three</span>`;
@@ -114,17 +113,14 @@ function indexPage(method: Method): string {
     .join('\n');
 
   const body = `<section class="hero">
-    <div class="hero-logo">${pickMark(88)}</div>
-    <h1>${BRAND_HTML}</h1>
-    <p class="hero-tagline">Master the guitar neck, three notes at a time.</p>
-    <div class="hero-method">
-      <h2>${method.title}</h2>
-      ${method.subtitle ? `<p class="hero-subtitle">${method.subtitle}</p>` : ''}
-      ${method.volume ? `<p class="hero-volume">${method.volume}</p>` : ''}
+    <div class="hero-brand">
+      ${pickMark(56)}
+      <div>
+        <h1>${BRAND_HTML}</h1>
+        <p class="hero-tagline">Master the guitar neck, three notes at a time.</p>
+      </div>
     </div>
-    <p class="hero-hint">🔊 Every diagram plays: hit ▶ for the chord
-      (arpeggio, then strummed), click any dot for the single note.</p>
-    <div class="hero-legend">${degreeLegendSVG()}</div>
+    <p class="hero-method-line"><strong>${method.title}</strong>${method.volume ? ` · ${method.volume}` : ''}</p>
   </section>
   <ol class="toc">${toc}</ol>`;
 
@@ -198,44 +194,34 @@ h1, h2, h3, h4, .chapter-num, .exercise-label, .brand, .chapters, .toc-num {
 main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 
 /* ---- Home ---- */
-.hero { text-align: center; padding: 34px 0 30px; }
-.hero-logo { margin-bottom: 6px; }
+.hero { text-align: center; padding: 18px 0 4px; }
+.hero-brand {
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  text-align: left;
+}
 .hero h1 {
-  font-size: 46px; margin: 10px 0 4px; letter-spacing: -0.5px;
+  font-size: 32px; margin: 0; letter-spacing: -0.5px;
   text-transform: uppercase;
 }
-.hero-tagline { font-size: 18px; font-style: italic; color: var(--faded); margin: 0 0 34px; }
-.hero-method {
-  border-top: 1px solid var(--line); max-width: 560px; margin: 0 auto; padding-top: 26px;
-}
-.hero-method h2 { font-size: 25px; margin: 0 0 6px; }
-.hero-subtitle { font-style: italic; color: var(--faded); font-size: 17px; margin: 0; }
-.hero-volume {
-  font-family: Helvetica, Arial, sans-serif; font-size: 12.5px;
-  text-transform: uppercase; letter-spacing: 2.5px; color: var(--accent);
-  margin: 18px 0 0;
-}
-.hero-hint {
-  max-width: 460px; margin: 30px auto 0; font-size: 15px; color: var(--faded);
-  background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px;
-}
-.hero-legend { margin-top: 14px; }
+.hero-tagline { font-size: 15px; font-style: italic; color: var(--faded); margin: 2px 0 0; }
+.hero-method-line { font-size: 16.5px; margin: 16px 0 0; }
+.hero-method-line strong { font-family: Helvetica, Arial, sans-serif; }
 
-.toc { list-style: none; padding: 0; margin: 30px 0; }
-.toc li + li { margin-top: 12px; }
+.toc { list-style: none; padding: 0; margin: 20px 0 30px; }
+.toc li + li { margin-top: 8px; }
 .toc a {
-  display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto;
+  display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto;
   column-gap: 14px; align-items: baseline;
   background: #fff; border: 1px solid var(--line); border-radius: 10px;
-  padding: 16px 20px; text-decoration: none; color: var(--ink);
+  padding: 12px 20px; text-decoration: none; color: var(--ink);
   transition: border-color 0.15s, transform 0.15s;
 }
 .toc a:hover { border-color: var(--accent); transform: translateX(3px); }
 .toc-num {
-  grid-row: 1 / 3; font-size: 26px; font-weight: 700; color: var(--accent);
+  grid-row: 1 / 3; font-size: 22px; font-weight: 700; color: var(--accent);
 }
-.toc-title { font-size: 19px; font-weight: 700; font-family: Helvetica, Arial, sans-serif; }
-.toc-intro { font-size: 14.5px; font-style: italic; color: var(--faded); }
+.toc-title { font-size: 17px; font-weight: 700; font-family: Helvetica, Arial, sans-serif; }
+.toc-intro { font-size: 13.5px; font-style: italic; color: var(--faded); }
 .toc a.toc-featured { border-left: 4px solid var(--accent); }
 .toc-badge {
   display: inline-block; margin-left: 10px; vertical-align: 2px;
