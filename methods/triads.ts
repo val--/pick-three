@@ -430,7 +430,7 @@ export const triadsMethod: Method = {
     /* ---------------- Chapter 6 ---------------- */
     {
       title: 'Triads in the wild',
-      teaser: '🎸 Real songs · playable from chapter 2',
+      featured: true,
       intro:
         'Everything you have practiced is hiding in records you already know. Five excerpts, five styles — and in each one, watch the same two ideas at work: inversions, and fingers that barely move.',
       blocks: [

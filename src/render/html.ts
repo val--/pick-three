@@ -18,8 +18,8 @@ export type Block =
 export interface Chapter {
   title: string;
   intro?: string;
-  /** Short pill shown on the site's table of contents to feature the chapter. */
-  teaser?: string;
+  /** Highlights the chapter on the site's table of contents (accent border). */
+  featured?: boolean;
   blocks: Block[];
 }
 

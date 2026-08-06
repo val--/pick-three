@@ -104,9 +104,9 @@ function chapterPage(method: Method, index: number): string {
 function indexPage(method: Method): string {
   const toc = method.chapters
     .map(
-      (c, i) => `<li><a href="${chapterFile(i)}"${c.teaser ? ' class="toc-featured"' : ''}>
+      (c, i) => `<li><a href="${chapterFile(i)}"${c.featured ? ' class="toc-featured"' : ''}>
         <span class="toc-num">${i + 1}</span>
-        <span class="toc-title">${c.title}${c.teaser ? `<span class="toc-badge">${c.teaser}</span>` : ''}</span>
+        <span class="toc-title">${c.title}</span>
         ${c.intro ? `<span class="toc-intro">${c.intro}</span>` : ''}
       </a></li>`,
     )
@@ -223,12 +223,6 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 .toc-title { font-size: 17px; font-weight: 700; font-family: Helvetica, Arial, sans-serif; }
 .toc-intro { font-size: 13.5px; font-style: italic; color: var(--faded); }
 .toc a.toc-featured { border-left: 4px solid var(--accent); }
-.toc-badge {
-  display: inline-block; margin-left: 10px; vertical-align: 2px;
-  background: var(--accent); color: #fff; border-radius: 999px;
-  padding: 3px 10px; font-size: 11px; font-weight: 700;
-  letter-spacing: 1px; text-transform: uppercase; white-space: nowrap;
-}
 
 /* ---- "Play real songs now" callout ---- */
 .songs-teaser {
