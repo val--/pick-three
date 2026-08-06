@@ -59,11 +59,30 @@ function keyPicker(): string {
   </div>`;
 }
 
+/** Radio pills adapting song excerpts to how far the learner has read. */
+function levelPicker(): string {
+  const options: [string, string, string, boolean][] = [
+    ['root', 'Root position only', 'chapter 2', false],
+    ['root1', 'Root + 1st inversion', 'chapter 3', false],
+    ['all', 'As recorded', 'chapter 4+', true],
+  ];
+  const pills = options
+    .map(([value, label, hint, checked]) =>
+      `<label><input type="radio" name="level" value="${value}"${checked ? ' checked' : ''}>
+        ${label} <em>(${hint})</em></label>`)
+    .join('');
+  return `<div class="level-picker">
+    <span class="level-label">🎓 Adapt to your level:</span>
+    <div class="level-options" role="radiogroup" aria-label="Adapt to your level">${pills}</div>
+  </div>`;
+}
+
 function chapterPage(method: Method, index: number): string {
   const c = method.chapters[index];
   const prev = index > 0 ? method.chapters[index - 1] : null;
   const next = index < method.chapters.length - 1 ? method.chapters[index + 1] : null;
   const hasKeyedFigures = c.blocks.some(b => 'spec' in b && b.spec);
+  const hasSongFigures = c.blocks.some(b => b.kind === 'diagramRow' && b.song);
 
   const body = `<article class="chapter">
     <header class="chapter-header">
@@ -71,6 +90,7 @@ function chapterPage(method: Method, index: number): string {
       <h1>${c.title}</h1>
     </header>
     ${hasKeyedFigures ? keyPicker() : ''}
+    ${hasSongFigures ? levelPicker() : ''}
     ${c.intro ? `<p class="chapter-intro">${c.intro}</p>` : ''}
     ${c.blocks.map(b => renderBlock(b, { interactive: true })).join('\n')}
     <nav class="pager">
@@ -231,6 +251,35 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
   background: #fff; cursor: pointer;
 }
 .key-hint { font-size: 13px; color: var(--faded); font-style: italic; }
+
+/* ---- Level picker (song excerpts) ---- */
+.level-picker {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 18px; margin: 0 0 22px;
+  font-family: Helvetica, Arial, sans-serif; font-size: 15px;
+}
+.level-label { font-weight: 700; }
+.level-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.level-options label {
+  border: 1.5px solid var(--line); border-radius: 999px;
+  padding: 6px 14px; cursor: pointer; font-size: 14px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.level-options label:hover { border-color: var(--accent); }
+.level-options label:has(input:checked) {
+  border-color: var(--accent); background: var(--accent); color: #fff;
+}
+.level-options input { position: absolute; opacity: 0; pointer-events: none; }
+.level-options em { font-style: italic; opacity: 0.75; font-size: 12.5px; }
+
+.adapted-badge {
+  display: inline-block; margin-bottom: 10px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 999px;
+  padding: 3px 10px;
+}
 
 /* ---- Chapters ---- */
 .chapter-header { border-bottom: 3px solid var(--ink); padding-bottom: 12px; margin-bottom: 24px; }

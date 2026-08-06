@@ -65,12 +65,45 @@ function chordOf(root: Note, ref: ChordRef): Triad {
   return triad(noteAbove(root, ref.steps, ref.semis), ref.quality);
 }
 
-/** The voicing closest to a reference fret — used for voice leading. */
-function nearestVoicing(t: Triad, set: StringSet, refFret: number): Voicing {
-  const all = ([0, 1, 2] as const).flatMap(inv => voicingsForInversion(t, set, inv));
+/**
+ * The voicing closest to a reference fret — used for voice leading.
+ * `allowed` restricts the inversions considered (learner level).
+ */
+export function nearestVoicing(
+  t: Triad,
+  set: StringSet,
+  refFret: number,
+  allowed: readonly (0 | 1 | 2)[] = [0, 1, 2],
+): Voicing {
+  const all = allowed.flatMap(inv => voicingsForInversion(t, set, inv));
   return all.sort(
     (a, b) => Math.abs(a.minFret - refFret) - Math.abs(b.minFret - refFret),
   )[0];
+}
+
+/** One song voicing: a specific triad, at a specific spot on the neck. */
+export interface SongChord {
+  root: string;
+  quality: TriadQuality;
+  set: StringSet;
+  inversion: 0 | 1 | 2;
+  /** Picks the occurrence closest to this fret (default: the lowest one). */
+  nearFret?: number;
+}
+
+/**
+ * A song excerpt re-voiced within the allowed inversions: each chord takes
+ * the nearest allowed voicing (the chapter-5 rule), anchored on the first
+ * chord's original position. Powers the "adapt to your level" control.
+ */
+export function songDiagrams(chords: SongChord[], allowed: readonly (0 | 1 | 2)[]): FigureDiagram[] {
+  let ref: number | undefined;
+  return chords.map(c => {
+    const t = triad(c.root, c.quality);
+    const v = nearestVoicing(t, c.set, ref ?? c.nearFret ?? 0, allowed);
+    ref = v.minFret;
+    return { voicing: v, title: `${chordName(t)} · ${INV_SHORT[v.inversion]}` };
+  });
 }
 
 /**

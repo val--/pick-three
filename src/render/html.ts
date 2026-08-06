@@ -1,5 +1,5 @@
 import { Voicing } from '../fretboard/fretboard.js';
-import { FigureSpec } from '../figures.js';
+import { FigureSpec, SongChord } from '../figures.js';
 import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 
 /**
@@ -10,7 +10,7 @@ import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 export type Block =
   | { kind: 'html'; html: string }
   | { kind: 'legend' }
-  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean }
+  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[] }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
   | { kind: 'tip'; html: string };
@@ -30,8 +30,8 @@ export interface Method {
 
 const midiOf = (v: Voicing) => v.notes.map(n => n.midi).join(',');
 
-const specAttr = (spec: FigureSpec | undefined, interactive: boolean) =>
-  interactive && spec ? ` data-spec="${JSON.stringify(spec).replace(/"/g, '&quot;')}"` : '';
+const jsonAttr = (name: string, value: unknown, interactive: boolean) =>
+  interactive && value ? ` data-${name}="${JSON.stringify(value).replace(/"/g, '&quot;')}"` : '';
 
 /**
  * Renders one block. In `interactive` mode (the site), diagrams get a listen
@@ -53,7 +53,7 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
           ${interactive ? `<button class="play" data-notes="${midiOf(d.voicing)}"${strumAttr} aria-label="Listen to ${d.title}" title="Listen">▶</button>` : ''}
         </div>`)
         .join('');
-      return `<figure class="diagram-row"${specAttr(block.spec, interactive)}>
+      return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}>
         ${block.title ? `<h4>${block.title}</h4>` : ''}
         <div class="diagram-cells">${cells}</div>
         ${block.caption ? `<figcaption>${block.caption}</figcaption>` : ''}
@@ -61,7 +61,7 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
     }
     case 'neckMap': {
       const seq = block.voicings.map(v => v.notes.map(n => n.midi));
-      return `<figure class="neck-map"${specAttr(block.spec, interactive)}>
+      return `<figure class="neck-map"${jsonAttr('spec', block.spec, interactive)}>
         ${block.title ? `<h4>${block.title}</h4>` : ''}
         ${interactive ? `<button class="play" data-seq="${JSON.stringify(seq).replace(/"/g, '&quot;')}" aria-label="Play the sequence" title="Play the sequence">▶</button>` : ''}
         <div class="neck-map-scroll">${neckMapSVG(block.voicings, { maxFret: block.maxFret ?? 15 })}</div>

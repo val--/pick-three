@@ -1,6 +1,6 @@
 import { noteName, parseNote } from '../src/theory/notes.js';
-import { triad, TriadQuality } from '../src/theory/triads.js';
-import { StringSet, voicingsForInversion } from '../src/fretboard/fretboard.js';
+import { triad } from '../src/theory/triads.js';
+import { StringSet } from '../src/fretboard/fretboard.js';
 import { Block, Method } from '../src/render/html.js';
 import {
   buildFigure,
@@ -8,7 +8,9 @@ import {
   FigureSpec,
   INV_SHORT,
   KEY_MAJOR,
+  nearestVoicing,
   RELATIVE_MINOR,
+  SongChord,
 } from '../src/figures.js';
 
 /* ---------- Content helpers ---------- */
@@ -31,29 +33,18 @@ function keyedMap(spec: FigureSpec, extra: { title?: string; caption?: string } 
   };
 }
 
-/** One song voicing: a specific triad, at a specific spot on the neck. */
-interface SongChord {
-  root: string;
-  quality: TriadQuality;
-  set: StringSet;
-  inversion: 0 | 1 | 2;
-  /** Picks the occurrence closest to this fret (default: the lowest one). */
-  nearFret?: number;
-}
-
 /**
  * Fixed diagram row for real-song excerpts: exact voicings in the song's
- * key, deliberately NOT keyed to the root-note picker.
+ * key, deliberately NOT keyed to the root-note picker. The chord data is
+ * embedded so the site's level control can re-voice the excerpt.
  */
 function songRow(chords: SongChord[], extra: { title?: string; caption?: string } = {}): Block {
   const diagrams = chords.map(c => {
     const t = triad(c.root, c.quality);
-    const near = c.nearFret ?? 0;
-    const v = voicingsForInversion(t, c.set, c.inversion)
-      .sort((a, b) => Math.abs(a.minFret - near) - Math.abs(b.minFret - near))[0];
+    const v = nearestVoicing(t, c.set, c.nearFret ?? 0, [c.inversion]);
     return { voicing: v, title: `${chordName(t)} · ${INV_SHORT[c.inversion]}` };
   });
-  return { kind: 'diagramRow', diagrams, strum: true, ...extra };
+  return { kind: 'diagramRow', diagrams, strum: true, song: chords, ...extra };
 }
 
 /* ---------- Generated appendix: the 12 keys ---------- */
