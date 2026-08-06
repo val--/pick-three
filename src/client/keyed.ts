@@ -126,7 +126,10 @@ document.addEventListener('click', event => {
   const cta = button.closest<HTMLElement>('.video-cta')!;
   const { yt, start, end } = cta.dataset;
   const src = `https://www.youtube-nocookie.com/embed/${yt}?start=${start}&end=${end}&autoplay=1&rel=0`;
-  cta.innerHTML = `<iframe src="${src}" title="Song excerpt"
+  // The button becomes the player; the "Open on YouTube" link stays as a
+  // fallback (embeds require an HTTP origin — they fail on file://).
+  button.outerHTML = `<iframe src="${src}" title="Song excerpt"
+    referrerpolicy="strict-origin-when-cross-origin"
     allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
 });
 

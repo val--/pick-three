@@ -41,11 +41,17 @@ const midiOf = (v: Voicing) => v.notes.map(n => n.midi).join(',');
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-/** Lazy YouTube embed: nothing loads until the learner asks for it. */
+/**
+ * Lazy YouTube embed: nothing loads until the learner asks for it. The
+ * plain YouTube link stays as a fallback — embeds refuse to play without
+ * an HTTP origin (error 153 on file://).
+ */
 function videoCta(video: SongVideo | undefined, interactive: boolean): string {
   if (!video || !interactive) return '';
+  const watchUrl = `https://www.youtube.com/watch?v=${video.id}&t=${video.start}s`;
   return `<div class="video-cta" data-yt="${video.id}" data-start="${video.start}" data-end="${video.end}">
     <button class="watch">🎬 Hear the record (${mmss(video.start)} – ${mmss(video.end)})</button>
+    <a class="video-link" href="${watchUrl}" target="_blank" rel="noopener">Open on YouTube ↗</a>
   </div>`;
 }
 

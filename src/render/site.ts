@@ -276,7 +276,12 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 }
 
 /* ---- Song excerpt video ---- */
-.video-cta { margin-top: 12px; }
+.video-cta { margin-top: 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.video-cta .video-link {
+  font-family: Helvetica, Arial, sans-serif; font-size: 13px;
+  color: var(--faded); text-decoration: none;
+}
+.video-cta .video-link:hover { color: var(--accent); text-decoration: underline; }
 .video-cta button.watch {
   font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700;
   color: var(--accent); background: #fff;

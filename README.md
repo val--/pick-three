@@ -10,8 +10,13 @@ diagrams. Logo lives in `src/render/logo.ts` (mark + SVG favicon data URI).
 ```bash
 npm install
 npm run generate   # → output/triads.pdf + output/site/ (+ triads.html, print version)
+npm run serve      # site on http://localhost:8137
 npm run typecheck
 ```
+
+Note: open the site through `npm run serve` (or any HTTP host), not as a
+`file://` page — YouTube refuses to embed without an HTTP origin
+(player error 153). An "Open on YouTube" fallback link is always shown.
 
 The site (`output/site/index.html`) is 100% static: one page per chapter, and
 every diagram plays — ▶ button (arpeggio then strummed chord, sequence for
