@@ -66,7 +66,7 @@ const PROG_1564 = [
 export const triadsMethod: Method = {
   title: 'Triads on the Guitar',
   subtitle: 'R · 3 · 5: root position and its inversions, all over the neck',
-  volume: 'Volume 1 · From the low E string to the high E',
+  volume: 'Volume 1 · Major & minor triads',
   chapters: [
     /* ---------------- Chapter 1 ---------------- */
     {
