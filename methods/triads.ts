@@ -38,7 +38,10 @@ function keyedMap(spec: FigureSpec, extra: { title?: string; caption?: string } 
  * key, deliberately NOT keyed to the root-note picker. The chord data is
  * embedded so the site's level control can re-voice the excerpt.
  */
-function songRow(chords: SongChord[], extra: { title?: string; caption?: string } = {}): Block {
+function songRow(
+  chords: SongChord[],
+  extra: { title?: string; caption?: string; video?: { id: string; start: number; end: number } } = {},
+): Block {
   const diagrams = chords.map(c => {
     const t = triad(c.root, c.quality);
     const v = nearestVoicing(t, c.set, c.nearFret ?? 0, [c.inversion]);
@@ -453,6 +456,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'Why these inversions? Dm and B♭ share two notes, D and F — they stay put, and the only move is A rising one fret to B♭. B♭ is played in 1st inversion precisely to make that possible. Same trick on C → G: the G on string 2 (fret 8) holds still while the other two fingers slide down, because G major takes its 1st inversion. Root notes change; the hand barely does.',
+            video: { id: '0PakoE1eBps', start: 0, end: 14 },
           },
         ),
         {
@@ -472,6 +476,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'Inversions in service of a descending line: A → E keeps the E (string 2, fret 5) in place while the other two fingers step down. E → D is the same 1st-inversion shape slid down two frets. D → A keeps the A (string 3, fret 2) and resolves onto the 2nd inversion — the closest A-major shape to where the hand already is. Four chords, one direction, and the open-A pedal ties it all together.',
+            video: { id: 'FVovq9TGBw0', start: 52, end: 70 },
           },
         ),
         {
@@ -490,6 +495,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'The opposite strategy from “Ritual”: all four chords in root position, the same R · 3 · 5 stack walked down the neck. No common tones held here — you hear the shape itself slide, which is exactly the effect. Two chapters ago you learned this shape once; Knopfler shows it is a chord vocabulary all by itself.',
+            video: { id: 'h0ffIJ7ZO4U', start: 0, end: 20 },
           },
         ),
         {
@@ -507,6 +513,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'A is played in 1st inversion — not by accident: it puts the chord at fret 5-6, right next to its neighbors. A → D keeps the A on the high E string (fret 5) in place. D → E is the same root-position shape moved up two frets. One position, three chords, zero jumps: that is why the skank sounds so effortless.',
+            video: { id: 'HNBCVM4KbUM', start: 0, end: 20 },
           },
         ),
         {
@@ -525,6 +532,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'Follow the common notes: Bm → D keeps two notes out of three (D and F♯) — only the G-string finger moves. D → F♯m keeps A and F♯ and again moves a single finger by one fret. Four different root notes, and no change costs more than one finger. That economy — inversions chosen so the hand stays put — is the engine of funk rhythm guitar.',
+            video: { id: '5NV6Rdv1a3I', start: 0, end: 15 },
           },
         ),
         {

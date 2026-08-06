@@ -281,6 +281,21 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
   padding: 3px 10px;
 }
 
+/* ---- Song excerpt video ---- */
+.video-cta { margin-top: 12px; }
+.video-cta button.watch {
+  font-family: Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--accent); background: #fff;
+  border: 1.5px solid var(--accent); border-radius: 999px;
+  padding: 8px 16px; cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.video-cta button.watch:hover { background: var(--accent); color: #fff; }
+.video-cta iframe {
+  width: min(560px, 100%); aspect-ratio: 16 / 9;
+  border: 0; border-radius: 10px; display: block;
+}
+
 /* ---- Chapters ---- */
 .chapter-header { border-bottom: 3px solid var(--ink); padding-bottom: 12px; margin-bottom: 24px; }
 .chapter-num {

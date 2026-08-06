@@ -116,6 +116,20 @@ function applyLevel(level: Level): void {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Lazy YouTube excerpts (song sections)                              */
+/* ------------------------------------------------------------------ */
+
+document.addEventListener('click', event => {
+  const button = (event.target as HTMLElement).closest('.video-cta button.watch');
+  if (!button) return;
+  const cta = button.closest<HTMLElement>('.video-cta')!;
+  const { yt, start, end } = cta.dataset;
+  const src = `https://www.youtube-nocookie.com/embed/${yt}?start=${start}&end=${end}&autoplay=1&rel=0`;
+  cta.innerHTML = `<iframe src="${src}" title="Song excerpt"
+    allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+});
+
 const levelRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="level"]')];
 if (levelRadios.length) {
   const saved = localStorage.getItem(LEVEL_KEY) as Level | null;

@@ -10,7 +10,7 @@ import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 export type Block =
   | { kind: 'html'; html: string }
   | { kind: 'legend' }
-  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[] }
+  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[]; video?: SongVideo }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
   | { kind: 'tip'; html: string };
@@ -30,7 +30,24 @@ export interface Method {
   chapters: Chapter[];
 }
 
+/** YouTube excerpt: only the [start, end] window that contains the triads. */
+export interface SongVideo {
+  id: string;
+  start: number;
+  end: number;
+}
+
 const midiOf = (v: Voicing) => v.notes.map(n => n.midi).join(',');
+
+const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+/** Lazy YouTube embed: nothing loads until the learner asks for it. */
+function videoCta(video: SongVideo | undefined, interactive: boolean): string {
+  if (!video || !interactive) return '';
+  return `<div class="video-cta" data-yt="${video.id}" data-start="${video.start}" data-end="${video.end}">
+    <button class="watch">🎬 Hear the record (${mmss(video.start)} – ${mmss(video.end)})</button>
+  </div>`;
+}
 
 const jsonAttr = (name: string, value: unknown, interactive: boolean) =>
   interactive && value ? ` data-${name}="${JSON.stringify(value).replace(/"/g, '&quot;')}"` : '';
@@ -59,6 +76,7 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
         ${block.title ? `<h4>${block.title}</h4>` : ''}
         <div class="diagram-cells">${cells}</div>
         ${block.caption ? `<figcaption>${block.caption}</figcaption>` : ''}
+        ${videoCta(block.video, interactive)}
       </figure>`;
     }
     case 'neckMap': {
