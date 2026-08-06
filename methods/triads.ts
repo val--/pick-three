@@ -53,7 +53,7 @@ function songRow(chords: SongChord[], extra: { title?: string; caption?: string 
       .sort((a, b) => Math.abs(a.minFret - near) - Math.abs(b.minFret - near))[0];
     return { voicing: v, title: `${chordName(t)} · ${INV_SHORT[c.inversion]}` };
   });
-  return { kind: 'diagramRow', diagrams, ...extra };
+  return { kind: 'diagramRow', diagrams, strum: true, ...extra };
 }
 
 /* ---------- Generated appendix: the 12 keys ---------- */

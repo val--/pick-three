@@ -388,6 +388,13 @@ function playChord(midis) {
   return strum + 2.0 - t0;
 }
 
+/** The chord strummed directly, no arpeggio (song excerpts). */
+function playStrum(midis) {
+  const t0 = audioCtx().currentTime + 0.05;
+  midis.forEach((m, i) => pluck(m, t0 + i * 0.045));
+  return 2.1;
+}
+
 /** Sequence of voicings (neck maps): each chord strummed, one after another. */
 function playSequence(seq) {
   const t0 = audioCtx().currentTime + 0.05;
@@ -415,7 +422,8 @@ document.addEventListener('click', event => {
   const button = event.target.closest('button.play');
   if (!button || button.classList.contains('playing')) return;
   if (button.dataset.notes) {
-    markPlaying(button, playChord(button.dataset.notes.split(',').map(Number)));
+    const midis = button.dataset.notes.split(',').map(Number);
+    markPlaying(button, 'strum' in button.dataset ? playStrum(midis) : playChord(midis));
   } else if (button.dataset.seq) {
     markPlaying(button, playSequence(JSON.parse(button.dataset.seq)));
   }

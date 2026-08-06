@@ -10,7 +10,7 @@ import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 export type Block =
   | { kind: 'html'; html: string }
   | { kind: 'legend' }
-  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec }
+  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
   | { kind: 'tip'; html: string };
@@ -45,9 +45,12 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
     case 'legend':
       return `<div class="legend">${degreeLegendSVG()}</div>`;
     case 'diagramRow': {
+      // strum: play the chord directly (song excerpts) instead of the
+      // teaching arpeggio-then-strum
+      const strumAttr = block.strum ? ' data-strum' : '';
       const cells = block.diagrams
         .map(d => `<div class="diagram-cell">${chordDiagramSVG(d.voicing, { title: d.title })}
-          ${interactive ? `<button class="play" data-notes="${midiOf(d.voicing)}" aria-label="Listen to ${d.title}" title="Listen">▶</button>` : ''}
+          ${interactive ? `<button class="play" data-notes="${midiOf(d.voicing)}"${strumAttr} aria-label="Listen to ${d.title}" title="Listen">▶</button>` : ''}
         </div>`)
         .join('');
       return `<figure class="diagram-row"${specAttr(block.spec, interactive)}>
