@@ -476,7 +476,7 @@ export const triadsMethod: Method = {
           {
             caption:
               'Inversions in service of a descending line: A → E keeps the E (string 2, fret 5) in place while the other two fingers step down. E → D is the same 1st-inversion shape slid down two frets. D → A keeps the A (string 3, fret 2) and resolves onto the 2nd inversion — the closest A-major shape to where the hand already is. Four chords, one direction, and the open-A pedal ties it all together.',
-            video: { id: 'FVovq9TGBw0', start: 52, end: 70 },
+            video: { id: 'FVovq9TGBw0', start: 42, end: 60 },
           },
         ),
         {
