@@ -1,10 +1,12 @@
 import { noteName, parseNote } from '../src/theory/notes.js';
-import { triad } from '../src/theory/triads.js';
-import { StringSet } from '../src/fretboard/fretboard.js';
+import { triad, TriadQuality } from '../src/theory/triads.js';
+import { StringSet, voicingsForInversion } from '../src/fretboard/fretboard.js';
 import { Block, Method } from '../src/render/html.js';
 import {
   buildFigure,
+  chordName,
   FigureSpec,
+  INV_SHORT,
   KEY_MAJOR,
   RELATIVE_MINOR,
 } from '../src/figures.js';
@@ -27,6 +29,31 @@ function keyedMap(spec: FigureSpec, extra: { title?: string; caption?: string } 
     voicings: buildFigure(spec, DEFAULT_ROOT).map(d => d.voicing),
     ...extra,
   };
+}
+
+/** One song voicing: a specific triad, at a specific spot on the neck. */
+interface SongChord {
+  root: string;
+  quality: TriadQuality;
+  set: StringSet;
+  inversion: 0 | 1 | 2;
+  /** Picks the occurrence closest to this fret (default: the lowest one). */
+  nearFret?: number;
+}
+
+/**
+ * Fixed diagram row for real-song excerpts: exact voicings in the song's
+ * key, deliberately NOT keyed to the root-note picker.
+ */
+function songRow(chords: SongChord[], extra: { title?: string; caption?: string } = {}): Block {
+  const diagrams = chords.map(c => {
+    const t = triad(c.root, c.quality);
+    const near = c.nearFret ?? 0;
+    const v = voicingsForInversion(t, c.set, c.inversion)
+      .sort((a, b) => Math.abs(a.minFret - near) - Math.abs(b.minFret - near))[0];
+    return { voicing: v, title: `${chordName(t)} · ${INV_SHORT[c.inversion]}` };
+  });
+  return { kind: 'diagramRow', diagrams, ...extra };
 }
 
 /* ---------- Generated appendix: the 12 keys ---------- */
@@ -388,6 +415,111 @@ export const triadsMethod: Method = {
           <p>Every major and minor triad, spelled out. Use this table to check your transpositions —
             then put it away: the neck should become your only reference.</p>
           ${allKeysTable()}`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 6 ---------------- */
+    {
+      title: 'Triads in the wild',
+      intro:
+        'Everything you have practiced is hiding in records you already know. Four excerpts, four styles — and in each one, watch the same two ideas at work: inversions, and fingers that barely move.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>For each excerpt below, don’t just learn the shapes — read them with the tools
+            from this method. Ask: <em>which inversion is this?</em> (find the red R), and
+            <em>why this inversion here?</em> The answer is almost always the same: it is the one
+            that keeps common notes in place and moves the fewest fingers. These excerpts are shown
+            in their original keys.</p>
+          <h3>Ghost — “Ritual” (intro)</h3>
+          <p>A metal riff that is pure triad work: chugged sixteenth notes on strings 4-3-2, high on
+            the neck, with muted scratches between chords. The whole intro lives between frets 7
+            and 12.</p>`,
+        },
+        songRow(
+          [
+            { root: 'D', quality: 'minor', set: [4, 3, 2], inversion: 0, nearFret: 10 },
+            { root: 'B♭', quality: 'major', set: [4, 3, 2], inversion: 1, nearFret: 10 },
+            { root: 'C', quality: 'major', set: [4, 3, 2], inversion: 0, nearFret: 8 },
+            { root: 'G', quality: 'major', set: [4, 3, 2], inversion: 1, nearFret: 7 },
+          ],
+          {
+            caption:
+              'Why these inversions? Dm and B♭ share two notes, D and F — they stay put, and the only move is A rising one fret to B♭. B♭ is played in 1st inversion precisely to make that possible. Same trick on C → G: the G on string 2 (fret 8) holds still while the other two fingers slide down, because G major takes its 1st inversion. Root notes change; the hand barely does.',
+          },
+        ),
+        {
+          kind: 'html',
+          html: `<h3>Dire Straits — “Sultans of Swing” (verse turnaround)</h3>
+          <p>Knopfler answers the vocal with chord stabs on the top three strings: Dm, C, B♭, then
+            A major to turn the progression around.</p>`,
+        },
+        songRow(
+          [
+            { root: 'D', quality: 'minor', set: [3, 2, 1], inversion: 0, nearFret: 5 },
+            { root: 'C', quality: 'major', set: [3, 2, 1], inversion: 0, nearFret: 3 },
+            { root: 'B♭', quality: 'major', set: [3, 2, 1], inversion: 0, nearFret: 1 },
+            { root: 'A', quality: 'major', set: [3, 2, 1], inversion: 0 },
+          ],
+          {
+            caption:
+              'The opposite strategy from “Ritual”: all four chords in root position, the same R · 3 · 5 stack walked down the neck. No common tones held here — you hear the shape itself slide, which is exactly the effect. Two chapters ago you learned this shape once; Knopfler shows it is a chord vocabulary all by itself.',
+          },
+        ),
+        {
+          kind: 'html',
+          html: `<h3>Bob Marley — “Three Little Birds” (skank)</h3>
+          <p>The reggae skank: short up-stroke chops on the offbeats, top three strings only. A
+            I–IV–V in A major (A, D, E) that never leaves frets 5-9.</p>`,
+        },
+        songRow(
+          [
+            { root: 'A', quality: 'major', set: [3, 2, 1], inversion: 1, nearFret: 5 },
+            { root: 'D', quality: 'major', set: [3, 2, 1], inversion: 0, nearFret: 5 },
+            { root: 'E', quality: 'major', set: [3, 2, 1], inversion: 0, nearFret: 7 },
+          ],
+          {
+            caption:
+              'A is played in 1st inversion — not by accident: it puts the chord at fret 5-6, right next to its neighbors. A → D keeps the A on the high E string (fret 5) in place. D → E is the same root-position shape moved up two frets. One position, three chords, zero jumps: that is why the skank sounds so effortless.',
+          },
+        ),
+        {
+          kind: 'html',
+          html: `<h3>Daft Punk ft. Nile Rodgers — “Get Lucky” (rhythm guitar)</h3>
+          <p>Bm – D – F♯m – E, chopped in sixteenths. Here is the progression voiced with the
+            chapter-5 rule — each chord takes the inversion closest to the previous one:</p>`,
+        },
+        songRow(
+          [
+            { root: 'B', quality: 'minor', set: [3, 2, 1], inversion: 0, nearFret: 3 },
+            { root: 'D', quality: 'major', set: [3, 2, 1], inversion: 2, nearFret: 2 },
+            { root: 'F♯', quality: 'minor', set: [3, 2, 1], inversion: 1, nearFret: 2 },
+            { root: 'E', quality: 'major', set: [3, 2, 1], inversion: 1, nearFret: 2 },
+          ],
+          {
+            caption:
+              'Follow the common notes: Bm → D keeps two notes out of three (D and F♯) — only the G-string finger moves. D → F♯m keeps A and F♯ and again moves a single finger by one fret. Four different root notes, and no change costs more than one finger. That economy — inversions chosen so the hand stays put — is the engine of funk rhythm guitar.',
+          },
+        ),
+        {
+          kind: 'exercise',
+          title: 'Steal these, then hunt your own',
+          html: `<ol>
+            <li>Learn the four excerpts. For each chord, name the inversion out loud before playing
+              it, and find which note(s) it shares with the next chord.</li>
+            <li>Take the “Ritual” excerpt and play it with <em>all root positions</em> instead.
+              Feel how much more your hand moves — then go back to the original inversions.</li>
+            <li>Pick a song you already play with open chords. Find its triads on strings 3-2-1
+              around one position, using the chapter-5 rule. You just made your own arrangement.</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p>Where to look for more: funk and reggae rhythm parts (top three strings, nearly
+            always), verse guitars that leave room for the voice, and any riff that sounds “small
+            but precise”. When a part sounds like a keyboard stab, it is usually a triad — find the
+            R and the rest falls under your fingers.</p>`,
         },
       ],
     },
