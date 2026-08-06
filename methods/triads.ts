@@ -228,6 +228,14 @@ export const triadsMethod: Method = {
             every string set, every inversion and every key. Remember the move, not just the
             shapes.</p>`,
         },
+        {
+          kind: 'html',
+          html: `<div class="songs-teaser">🎸 <strong>You can already play real music.</strong>
+            The final chapter, <a href="chapter-6.html">Triads in the wild</a>, adapts to your
+            level: set it to <em>Root position only</em> and five real riffs — Ghost, Ozzy
+            Osbourne, Dire Straits, Bob Marley, Daft Punk — are within reach with nothing more
+            than this chapter.</div>`,
+        },
       ],
     },
 
@@ -275,6 +283,12 @@ export const triadsMethod: Method = {
           html: `<p>To the ear, the first inversion sounds <em>lighter</em>, less conclusive than
             root position: the bass is not playing the note that names the chord. Arrangers use it
             to make the bass line <em>walk</em> smoothly.</p>`,
+        },
+        {
+          kind: 'html',
+          html: `<div class="songs-teaser">🎸 In <a href="chapter-6.html">Triads in the wild</a>,
+            switch the level to <em>Root + 1st inversion</em>: most of the excerpts now match the
+            records exactly — Ghost and Ozzy Osbourne never use anything else.</div>`,
         },
       ],
     },
@@ -413,6 +427,7 @@ export const triadsMethod: Method = {
     /* ---------------- Chapter 6 ---------------- */
     {
       title: 'Triads in the wild',
+      teaser: '🎸 Real songs · playable from chapter 2',
       intro:
         'Everything you have practiced is hiding in records you already know. Five excerpts, five styles — and in each one, watch the same two ideas at work: inversions, and fingers that barely move.',
       blocks: [

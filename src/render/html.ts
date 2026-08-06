@@ -18,6 +18,8 @@ export type Block =
 export interface Chapter {
   title: string;
   intro?: string;
+  /** Short pill shown on the site's table of contents to feature the chapter. */
+  teaser?: string;
   blocks: Block[];
 }
 
@@ -218,6 +220,13 @@ const CSS = /* css */ `
     font-size: 8.5pt; text-transform: uppercase; letter-spacing: 1.5pt;
     color: #2874a6; font-weight: 700; margin-bottom: 1.5mm;
   }
+
+  .songs-teaser {
+    border: 0.8pt solid #c0392b; border-radius: 2mm;
+    padding: 3.5mm 5mm; margin: 5mm 0; break-inside: avoid;
+    font-size: 10.5pt;
+  }
+  .songs-teaser a { color: #c0392b; font-weight: 700; text-decoration: none; }
 
   table { border-collapse: collapse; width: 100%; margin: 4mm 0; font-size: 10.5pt; }
   th, td { border: 0.5pt solid #b0bec5; padding: 1.8mm 3mm; text-align: left; }
