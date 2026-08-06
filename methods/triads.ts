@@ -423,7 +423,7 @@ export const triadsMethod: Method = {
     {
       title: 'Triads in the wild',
       intro:
-        'Everything you have practiced is hiding in records you already know. Four excerpts, four styles — and in each one, watch the same two ideas at work: inversions, and fingers that barely move.',
+        'Everything you have practiced is hiding in records you already know. Five excerpts, five styles — and in each one, watch the same two ideas at work: inversions, and fingers that barely move.',
       blocks: [
         {
           kind: 'html',
@@ -447,6 +447,25 @@ export const triadsMethod: Method = {
           {
             caption:
               'Why these inversions? Dm and B♭ share two notes, D and F — they stay put, and the only move is A rising one fret to B♭. B♭ is played in 1st inversion precisely to make that possible. Same trick on C → G: the G on string 2 (fret 8) holds still while the other two fingers slide down, because G major takes its 1st inversion. Root notes change; the hand barely does.',
+          },
+        ),
+        {
+          kind: 'html',
+          html: `<h3>Ozzy Osbourne — “Crazy Train” (pre-chorus)</h3>
+          <p>Randy Rhoads under “I’ve listened to preachers…”: palm-muted open A string as a
+            pedal, and triads on strings 4-3-2 answering between the chugs. The chords walk
+            <em>down</em> the neck, from fret 7 to fret 2, while the bass note never changes.</p>`,
+        },
+        songRow(
+          [
+            { root: 'A', quality: 'major', set: [4, 3, 2], inversion: 0, nearFret: 5 },
+            { root: 'E', quality: 'major', set: [4, 3, 2], inversion: 1, nearFret: 4 },
+            { root: 'D', quality: 'major', set: [4, 3, 2], inversion: 1, nearFret: 2 },
+            { root: 'A', quality: 'major', set: [4, 3, 2], inversion: 2, nearFret: 2 },
+          ],
+          {
+            caption:
+              'Inversions in service of a descending line: A → E keeps the E (string 2, fret 5) in place while the other two fingers step down. E → D is the same 1st-inversion shape slid down two frets. D → A keeps the A (string 3, fret 2) and resolves onto the 2nd inversion — the closest A-major shape to where the hand already is. Four chords, one direction, and the open-A pedal ties it all together.',
           },
         ),
         {
