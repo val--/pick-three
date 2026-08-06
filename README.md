@@ -51,3 +51,7 @@ Create a file in `methods/` exporting a `Method` object (see
 `exercise`, `tip`, `legend`) and wire it into `src/main.ts`.
 
 Diagram color code: root red, third blue, fifth gray.
+
+## TODO
+- Add a "learning plan" (sticky post-it on the left) or a way to track progress
+- Add more trieds songs example, and add audio samples (Youtube at the right time-frame?)
