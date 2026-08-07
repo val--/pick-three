@@ -28,7 +28,11 @@ function page(method: Method, title: string, current: number | null, body: strin
 <body>
   <header class="topbar">
     <a class="brand" href="index.html">${pickMark(24, { withLabels: false })}<span>${BRAND_HTML}</span></a>
-    <nav class="chapters" aria-label="Chapters">${nav}</nav>
+    <div class="topbar-right">
+      <nav class="chapters" aria-label="Chapters">${nav}</nav>
+      <button class="export" onclick="window.print()"
+        title="Print this page or save it as a PDF — your key and level choices are kept">⎙ PDF</button>
+    </div>
   </header>
   <main>${body}</main>
   <footer class="site-footer">
@@ -123,6 +127,7 @@ function indexPage(method: Method): string {
       </div>
     </div>
     <p class="hero-method-line"><strong>${method.title}</strong>${method.volume ? ` · ${method.volume}` : ''}</p>
+    <p class="hero-pdf"><a href="triads.pdf" download>⎙ Download the full method as a PDF</a></p>
   </section>
   <ol class="toc">${toc}</ol>`;
 
@@ -183,6 +188,16 @@ h1, h2, h3, h4, .chapter-num, .exercise-label, .brand, .chapters, .toc-num {
 }
 .brand svg { display: block; }
 .accent { color: var(--accent); }
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.export {
+  font-family: Helvetica, Arial, sans-serif; font-size: 12.5px; font-weight: 700;
+  color: var(--faded); background: none;
+  border: 1.5px solid var(--line); border-radius: 999px;
+  padding: 5px 12px; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.export:hover { border-color: var(--accent); color: var(--accent); }
+
 .chapters { display: flex; gap: 6px; }
 .chapters a {
   display: flex; align-items: center; justify-content: center;
@@ -208,6 +223,9 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 .hero-tagline { font-size: 15px; font-style: italic; color: var(--faded); margin: 2px 0 0; }
 .hero-method-line { font-size: 16.5px; margin: 16px 0 0; }
 .hero-method-line strong { font-family: Helvetica, Arial, sans-serif; }
+.hero-pdf { margin: 8px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 13px; }
+.hero-pdf a { color: var(--faded); text-decoration: none; }
+.hero-pdf a:hover { color: var(--accent); text-decoration: underline; }
 
 .toc { list-style: none; padding: 0; margin: 20px 0 30px; }
 .toc li + li { margin-top: 8px; }
@@ -409,6 +427,26 @@ th { font-family: Helvetica, Arial, sans-serif; font-size: 13px; background: #f1
   .brand { display: none; }
   main { padding: 24px 14px 40px; }
   .hero h1 { font-size: 30px; }
+}
+
+/* ---- Print / "export as PDF" ----
+   Interactive chrome disappears; the learner's current key and level
+   choices (including re-voiced rows and their badges) are what prints. */
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; }
+  .topbar, .key-picker, .level-picker, .play, .row-play, .video-cta,
+  .pager, .site-footer, .hero-pdf { display: none !important; }
+  main { max-width: 100%; padding: 0; }
+  figure, .diagram-cell, .exercise, .tip, .songs-teaser { break-inside: avoid; }
+  h3 { break-after: avoid; }
+  .diagram-cells { gap: 14px; }
+  .diagram-cell { padding: 8px 8px 6px; }
+  .diagram-cell svg { width: 150px; }
+  .neck-map-scroll { overflow: visible; border: none; padding: 0; }
+  .neck-map-scroll svg { min-width: 0; }
+  a { color: inherit; text-decoration: none; }
 }
 `;
 

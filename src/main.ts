@@ -29,6 +29,7 @@ await build({
 });
 console.log(`Site: ${SITE_DIR.pathname}index.html`);
 
-const pdfPath = new URL('triads.pdf', OUT_DIR);
+// The full-method PDF ships with the site (downloadable from the home page)
+const pdfPath = new URL('triads.pdf', SITE_DIR);
 await htmlToPdf(html, pdfPath.pathname);
 console.log(`PDF : ${pdfPath.pathname}`);

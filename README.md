@@ -9,10 +9,15 @@ diagrams. Logo lives in `src/render/logo.ts` (mark + SVG favicon data URI).
 
 ```bash
 npm install
-npm run generate   # → output/triads.pdf + output/site/ (+ triads.html, print version)
+npm run generate   # → output/site/ incl. triads.pdf (+ output/triads.html, print source)
 npm run serve      # site on http://localhost:8137
 npm run typecheck
 ```
+
+PDF export, two ways: the **⎙ PDF button** in the top bar prints the current
+page (interactive chrome hidden; the reader's key and level choices are kept),
+and the home page links the **full-method PDF** generated at build time
+(`site/triads.pdf`).
 
 Note: open the site through `npm run serve` (or any HTTP host), not as a
 `file://` page — YouTube refuses to embed without an HTTP origin
