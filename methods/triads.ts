@@ -82,16 +82,16 @@ const FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B
 const MINOR_FIFTHS = ['A', 'E', 'B', 'F♯', 'C♯', 'G♯', 'E♭', 'B♭', 'F', 'C', 'G', 'D'];
 
 /**
- * The circle of fifths with the string sets rotating high-to-low: a fifth
- * up sits at the same fret one set lower (C at 5-5-3 on strings 3-2-1,
- * G right next to it at 5-4-3 on strings 4-3-2), so the circle stays in
- * position and keeps the same key order as the other rows.
+ * The circle of fifths alternating between the two treble string sets —
+ * where triads actually get played. A fifth up sits at the same fret one
+ * string set lower (C at 5-5-3 on strings 3-2-1, G right next to it at
+ * 5-4-3 on strings 4-3-2), so chords advance in same-fret pairs.
  */
-const SETS_DESCENDING: StringSet[] = [[3, 2, 1], [4, 3, 2], [5, 4, 3], [6, 5, 4]];
+const TREBLE_SETS: StringSet[] = [[3, 2, 1], [4, 3, 2]];
 const IN_POSITION_FIFTHS: SongChord[] = FIFTHS.map((root, i) => ({
   root,
   quality: 'major',
-  set: SETS_DESCENDING[i % 4],
+  set: TREBLE_SETS[i % 2],
   inversion: 0,
   nearFret: i === 0 ? 3 : undefined,
 }));
@@ -642,8 +642,9 @@ export const triadsMethod: Method = {
           html: `<h3>Staying in position: cross the string sets</h3>
           <p>One more trick, and the circle almost stops moving. On the guitar, <em>a fifth up sits
             at the same fret, one string set lower</em>: play C on strings 3-2-1 (frets 5-5-3) and
-            G is right there on strings 4-3-2 (frets 5-4-3). Rotate through the four string sets —
-            3-2-1 → 4-3-2 → 5-4-3 → 6-5-4 — and the circle locks into place:</p>`,
+            G is right there on strings 4-3-2 (frets 5-4-3). Alternate between those two string
+            sets — the ones triads actually get played on — and the circle advances in same-fret
+            pairs:</p>`,
         },
         {
           kind: 'diagramRow',
@@ -651,9 +652,9 @@ export const triadsMethod: Method = {
           strum: true,
           song: IN_POSITION_FIFTHS,
           keepCaption: true,
-          title: 'The circle of fifths, across the string sets',
+          title: 'The circle of fifths, across the treble string sets',
           caption:
-            'With all inversions available, the whole circle fits between the nut and fret 5 — twelve keys, essentially zero position shifts. At root position only, it becomes the classic three-zone drill: four chords around fret 5, four around fret 9, four around fret 13 — the hand moves twice in twelve chords instead of on every chord. This is the row that makes the root-only workout worth doing. (Read it right to left for the circle of fourths, the direction chords move in most songs.)',
+            'With all inversions available, the whole circle fits between the nut and fret 5 — twelve keys, essentially zero position shifts. At root position only, it becomes a ladder: chords climb in same-fret pairs (C and G around fret 5, D and A around 7, E and B around 9…) all the way to B♭ and F at the top of the neck — every move two frets or less, always on the string sets you actually comp on. Read it right to left to climb back down (the circle of fourths, the direction chords move in most songs).',
         },
         {
           kind: 'exercise',
