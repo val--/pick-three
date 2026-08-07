@@ -1,4 +1,5 @@
 import { noteName, parseNote } from '../src/theory/notes.js';
+import { circleOfFifthsSVG } from '../src/render/svg.js';
 import { triad } from '../src/theory/triads.js';
 import { StringSet } from '../src/fretboard/fretboard.js';
 import { Block, Method } from '../src/render/html.js';
@@ -616,10 +617,16 @@ export const triadsMethod: Method = {
             the last: C → G → D → A → E → B → F♯, then on through the flats — D♭ → A♭ → E♭ →
             B♭ → F — and back home to C. It is <em>the</em> practice order: every key exactly once,
             and always the same relationship between one chord and the next.</p>
+          <figure class="circle-figure">
+            ${circleOfFifthsSVG()}
+            <figcaption>The workout’s route: start on C, travel clockwise. Read it
+              counterclockwise for the circle of fourths. The inner ring shows the relative
+              minors — the minor circle below starts on Am.</figcaption>
+          </figure>
           <p>The rows below voice the whole trip with the chapter-5 rule — each chord takes the
             inversion nearest to the previous one — so the “most logical order” is also the laziest
-            one for your hand. Use the level picker above to match how far you have read: the circle
-            works at every stage, it just costs more movement at the earlier ones.</p>`,
+            one for your hand. Use the level picker above to match how far you have read, and hit
+            <strong>“play the row”</strong> to hear a full trip around the circle.</p>`,
         },
         workoutRow(FIFTHS, 'major', SET_123, 3, {
           title: 'The major circle, strings 3-2-1',

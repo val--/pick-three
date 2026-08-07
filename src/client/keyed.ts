@@ -90,14 +90,19 @@ const LEVELS: Record<Exclude<Level, 'all'>, {
 };
 
 /** Original markup of each song figure, captured before the first adaptation. */
-const originals = new Map<HTMLElement, { cells: string; caption: string | null }>();
+const originals = new Map<HTMLElement, { cells: string; caption: string | null; seq: string | null }>();
 
 function applyLevel(level: Level): void {
   for (const figure of document.querySelectorAll<HTMLElement>('figure[data-song]')) {
     const cells = figure.querySelector('.diagram-cells')!;
     const caption = figure.querySelector('figcaption');
+    const rowButton = figure.querySelector<HTMLButtonElement>('.row-play button.play');
     if (!originals.has(figure)) {
-      originals.set(figure, { cells: cells.innerHTML, caption: caption?.innerHTML ?? null });
+      originals.set(figure, {
+        cells: cells.innerHTML,
+        caption: caption?.innerHTML ?? null,
+        seq: rowButton?.dataset.seq ?? null,
+      });
     }
     figure.querySelector('.adapted-badge')?.remove();
 
@@ -105,12 +110,17 @@ function applyLevel(level: Level): void {
       const original = originals.get(figure)!;
       cells.innerHTML = original.cells;
       if (caption && original.caption !== null) caption.innerHTML = original.caption;
+      if (rowButton && original.seq !== null) rowButton.dataset.seq = original.seq;
       continue;
     }
 
     const { allowed, badge, caption: captionText } = LEVELS[level];
     const chords = JSON.parse(figure.dataset.song!) as SongChord[];
-    cells.innerHTML = cellsHTML(songDiagrams(chords, allowed), { strum: true });
+    const diagrams = songDiagrams(chords, allowed);
+    cells.innerHTML = cellsHTML(diagrams, { strum: true });
+    if (rowButton) {
+      rowButton.dataset.seq = JSON.stringify(diagrams.map(d => d.voicing.notes.map(n => n.midi)));
+    }
     // Some captions are written to cover every level — leave those alone
     if (caption && !figure.hasAttribute('data-keep-caption')) caption.textContent = captionText;
     figure.insertAdjacentHTML('afterbegin', `<div class="adapted-badge">${badge}</div>`);

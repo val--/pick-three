@@ -277,6 +277,17 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
   padding: 3px 10px;
 }
 
+/* ---- Circle-of-fifths figure ---- */
+.circle-figure { text-align: center; margin: 24px 0; }
+.circle-figure svg { width: min(360px, 92%); height: auto; }
+
+/* ---- "Play the row" sequence button ---- */
+.row-play {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  font-family: Helvetica, Arial, sans-serif; font-size: 13.5px; color: var(--faded);
+}
+.row-play .play { width: 32px; height: 32px; font-size: 12px; }
+
 /* ---- Song excerpt video ---- */
 .video-cta { margin-top: 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .video-cta .video-link {

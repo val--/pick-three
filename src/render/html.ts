@@ -80,8 +80,16 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
           ${interactive ? `<button class="play" data-notes="${midiOf(d.voicing)}"${strumAttr} aria-label="Listen to ${d.title}" title="Listen">▶</button>` : ''}
         </div>`)
         .join('');
+      // Song/workout rows get a "play the whole row" sequence button
+      const rowSeq = block.song && interactive
+        ? `<div class="row-play">
+            <button class="play" data-seq="${JSON.stringify(block.diagrams.map(d => d.voicing.notes.map(n => n.midi))).replace(/"/g, '&quot;')}" aria-label="Play the whole row" title="Play the whole row">▶</button>
+            <span>play the row</span>
+          </div>`
+        : '';
       return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}${interactive && block.keepCaption ? ' data-keep-caption' : ''}>
         ${block.title ? `<h4>${block.title}</h4>` : ''}
+        ${rowSeq}
         <div class="diagram-cells">${cells}</div>
         ${block.caption ? `<figcaption>${block.caption}</figcaption>` : ''}
         ${videoCta(block.video, interactive)}

@@ -165,6 +165,51 @@ export function neckMapSVG(voicings: Voicing[], { maxFret = 15 } = {}): string {
   return parts.join('');
 }
 
+/**
+ * The circle of fifths: majors on the outer ring, relative minors inside.
+ * Clockwise = fifths (the workout's direction), counterclockwise = fourths.
+ */
+export function circleOfFifthsSVG(): string {
+  const MAJORS = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'];
+  const MINORS = ['Am', 'Em', 'Bm', 'F♯m', 'C♯m', 'G♯m', 'E♭m', 'B♭m', 'Fm', 'Cm', 'Gm', 'Dm'];
+  const C = 170;             // centre (viewBox 340×340)
+  const R_MAJOR = 122;
+  const R_MINOR = 80;
+  const pos = (i: number, r: number) => {
+    const a = (i * 30 - 90) * Math.PI / 180;
+    return [C + r * Math.cos(a), C + r * Math.sin(a)];
+  };
+
+  const parts: string[] = [];
+  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" viewBox="0 0 340 340" font-family="Helvetica, Arial, sans-serif">`);
+  parts.push(`<defs><marker id="arrow" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0 L8 4 L0 8 Z" fill="${DEGREE_COLORS.root}"/></marker></defs>`);
+
+  // Direction arrow: clockwise over the top, from F toward G
+  parts.push(`<path d="M ${pos(11.45, R_MAJOR + 26)[0]} ${pos(11.45, R_MAJOR + 26)[1]} A ${R_MAJOR + 26} ${R_MAJOR + 26} 0 0 1 ${pos(0.55, R_MAJOR + 26)[0]} ${pos(0.55, R_MAJOR + 26)[1]}"
+    fill="none" stroke="${DEGREE_COLORS.root}" stroke-width="1.6" marker-end="url(#arrow)"/>`);
+
+  // Rings
+  parts.push(`<circle cx="${C}" cy="${C}" r="${R_MAJOR}" fill="none" stroke="${FAINT}" stroke-width="1"/>`);
+  parts.push(`<circle cx="${C}" cy="${C}" r="${R_MINOR}" fill="none" stroke="${FAINT}" stroke-width="1" stroke-dasharray="3 4"/>`);
+
+  for (let i = 0; i < 12; i++) {
+    const [x, y] = pos(i, R_MAJOR);
+    const start = i === 0; // C, where the workout begins
+    parts.push(`<circle cx="${x}" cy="${y}" r="17" fill="${start ? DEGREE_COLORS.root : '#fff'}" stroke="${start ? DEGREE_COLORS.root : INK}" stroke-width="1.3"/>`);
+    parts.push(`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${start ? '#fff' : INK}" font-size="13" font-weight="700">${esc(MAJORS[i])}</text>`);
+    const [mx, my] = pos(i, R_MINOR);
+    parts.push(`<text x="${mx}" y="${my}" text-anchor="middle" dominant-baseline="central" fill="#90a4ae" font-size="10.5">${esc(MINORS[i])}</text>`);
+  }
+
+  // Direction labels
+  parts.push(`<text x="${C}" y="16" text-anchor="middle" fill="${DEGREE_COLORS.root}" font-size="11" font-weight="700">fifths →</text>`);
+  parts.push(`<text x="${C}" y="${C - R_MINOR + 34}" text-anchor="middle" fill="#90a4ae" font-size="10.5">← fourths</text>`);
+
+  parts.push('</svg>');
+  return parts.join('');
+}
+
 /** Degree color legend, to place once per page or chapter. */
 export function degreeLegendSVG(labels: Partial<Record<Degree, string>> = {}): string {
   const items: [Degree, string][] = [
