@@ -330,6 +330,11 @@ figure { margin: 26px 0; }
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   background: #fff; border: 1px solid var(--line); border-radius: 10px;
   padding: 14px 14px 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.diagram-cell.now-playing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
 }
 .diagram-cell svg { width: 186px; height: auto; }
 figcaption { font-size: 14px; color: var(--faded); font-style: italic; margin-top: 10px; }
@@ -471,14 +476,26 @@ function playStrum(midis) {
   return 2.1;
 }
 
-/** Sequence of voicings (neck maps): each chord strummed, one after another. */
+/** Seconds between chords in a sequence (neck maps, "play the row"). */
+const SEQ_STEP = 1.1;
+
+/** Sequence of voicings: each chord strummed, one after another. */
 function playSequence(seq) {
   const t0 = audioCtx().currentTime + 0.05;
-  const step = 1.1;
   seq.forEach((midis, i) => {
-    midis.forEach((m, j) => pluck(m, t0 + i * step + j * 0.05));
+    midis.forEach((m, j) => pluck(m, t0 + i * SEQ_STEP + j * 0.05));
   });
-  return seq.length * step + 1.2;
+  return seq.length * SEQ_STEP + 1.2;
+}
+
+/** Follows a row playback in the UI: lights up the chord being played. */
+function highlightRow(button, count) {
+  if (!button.closest('.row-play')) return;
+  const cells = [...button.closest('figure').querySelectorAll('.diagram-cell')].slice(0, count);
+  cells.forEach((cell, i) => {
+    setTimeout(() => cell.classList.add('now-playing'), i * SEQ_STEP * 1000 + 50);
+    setTimeout(() => cell.classList.remove('now-playing'), (i + 1) * SEQ_STEP * 1000 + 50);
+  });
 }
 
 function markPlaying(button, seconds) {
@@ -501,7 +518,9 @@ document.addEventListener('click', event => {
     const midis = button.dataset.notes.split(',').map(Number);
     markPlaying(button, 'strum' in button.dataset ? playStrum(midis) : playChord(midis));
   } else if (button.dataset.seq) {
-    markPlaying(button, playSequence(JSON.parse(button.dataset.seq)));
+    const seq = JSON.parse(button.dataset.seq);
+    markPlaying(button, playSequence(seq));
+    highlightRow(button, seq.length);
   }
 });
 `;
