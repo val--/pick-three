@@ -3,6 +3,7 @@ import { triad } from '../src/theory/triads.js';
 import { StringSet } from '../src/fretboard/fretboard.js';
 import { Block, Method } from '../src/render/html.js';
 import {
+  ALL_SETS,
   buildFigure,
   chordName,
   FigureSpec,
@@ -80,6 +81,19 @@ function workoutRow(
 /** The circle of fifths, switching to flats at the enharmonic seam. */
 const FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'];
 const MINOR_FIFTHS = ['A', 'E', 'B', 'F♯', 'C♯', 'G♯', 'E♭', 'B♭', 'F', 'C', 'G', 'D'];
+
+/**
+ * The circle of fourths with the string sets rotating low-to-high: a fourth
+ * up sits at the same fret one set higher, so the circle locks into place.
+ */
+const IN_POSITION_FOURTHS: SongChord[] = ['C', 'F', 'B♭', 'E♭', 'A♭', 'D♭', 'F♯', 'B', 'E', 'A', 'D', 'G']
+  .map((root, i) => ({
+    root,
+    quality: 'major',
+    set: ALL_SETS[i % 4],
+    inversion: 0,
+    nearFret: i === 0 ? 7 : undefined,
+  }));
 
 /* ---------- Generated appendix: the 12 keys ---------- */
 
@@ -622,6 +636,24 @@ export const triadsMethod: Method = {
             'Starting from Am at the nut, the chain climbs the neck steadily and lands on Dm at fret 10 — a built-in position-shifting exercise. Then play it backwards to come back down.',
         }),
         {
+          kind: 'html',
+          html: `<h3>Staying in position: cross the string sets</h3>
+          <p>One more trick, and the circle almost stops moving. Played in <strong>fourths</strong>
+            (the reverse direction — C → F → B♭ → … — the way chords actually move in songs), each
+            next root sits at <em>the same fret, one string set higher</em>. Rotate through the four
+            string sets and the circle locks into place:</p>`,
+        },
+        {
+          kind: 'diagramRow',
+          diagrams: songDiagrams(IN_POSITION_FOURTHS, [0, 1, 2]),
+          strum: true,
+          song: IN_POSITION_FOURTHS,
+          keepCaption: true,
+          title: 'The circle of fourths, across the string sets',
+          caption:
+            'With all inversions available, the whole circle fits between frets 5 and 8 — twelve keys, zero position shifts. At root position only, it becomes the classic three-zone drill: four chords around fret 8, four around fret 4, four around fret 12 — the hand moves twice in twelve chords instead of on every chord. This is the row that makes the root-only workout worth doing.',
+        },
+        {
           kind: 'exercise',
           title: 'The five-minute routine',
           html: `<ol>
@@ -630,8 +662,9 @@ export const triadsMethod: Method = {
             <li><strong>Majors, strings 4-3-2</strong> — same thing, one story down.</li>
             <li><strong>Minors, strings 3-2-1</strong> — up the neck, then read the row backwards
               to come back down.</li>
-            <li>Read any row <em>right to left</em> and you are practicing the circle of
-              <strong>fourths</strong> — the direction chords actually move in most songs.</li>
+            <li><strong>The in-position circle</strong> — play it until the string-set changes feel
+              automatic. This one is the keeper: practice it daily until it plays itself.</li>
+            <li>Read any row <em>right to left</em> to reverse the circle (fifths ↔ fourths).</li>
             <li>Clean at 60? Move to 80, then 100. Speed is a by-product, not the goal.</li>
           </ol>`,
         },

@@ -79,13 +79,13 @@ const LEVELS: Record<Exclude<Level, 'all'>, {
     allowed: [0],
     badge: 'adapted · root position only',
     caption: 'Adapted: every chord in root position, nearest to the previous one. '
-      + 'Notice the extra hand travel compared to the record — that is exactly what inversions buy you.',
+      + 'Notice the extra hand travel compared to the full version — that is exactly what inversions buy you.',
   },
   root1: {
     allowed: [0, 1],
     badge: 'adapted · root + 1st inversion',
     caption: 'Adapted: root position and 1st inversion only, each chord nearest to the previous one. '
-      + 'Compare with the record to see what the 2nd inversion would save.',
+      + 'Compare with the full version to see what the 2nd inversion would save.',
   },
 };
 
@@ -111,7 +111,8 @@ function applyLevel(level: Level): void {
     const { allowed, badge, caption: captionText } = LEVELS[level];
     const chords = JSON.parse(figure.dataset.song!) as SongChord[];
     cells.innerHTML = cellsHTML(songDiagrams(chords, allowed), { strum: true });
-    if (caption) caption.textContent = captionText;
+    // Some captions are written to cover every level — leave those alone
+    if (caption && !figure.hasAttribute('data-keep-caption')) caption.textContent = captionText;
     figure.insertAdjacentHTML('afterbegin', `<div class="adapted-badge">${badge}</div>`);
   }
 }

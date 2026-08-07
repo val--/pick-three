@@ -10,7 +10,9 @@ import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 export type Block =
   | { kind: 'html'; html: string }
   | { kind: 'legend' }
-  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[]; video?: SongVideo }
+  | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[]; video?: SongVideo;
+      /** Keep the caption when the level picker re-voices the row (caption written for all levels). */
+      keepCaption?: boolean }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
   | { kind: 'tip'; html: string };
@@ -78,7 +80,7 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
           ${interactive ? `<button class="play" data-notes="${midiOf(d.voicing)}"${strumAttr} aria-label="Listen to ${d.title}" title="Listen">▶</button>` : ''}
         </div>`)
         .join('');
-      return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}>
+      return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}${interactive && block.keepCaption ? ' data-keep-caption' : ''}>
         ${block.title ? `<h4>${block.title}</h4>` : ''}
         <div class="diagram-cells">${cells}</div>
         ${block.caption ? `<figcaption>${block.caption}</figcaption>` : ''}
