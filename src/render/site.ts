@@ -58,12 +58,12 @@ function keyPicker(): string {
   </div>`;
 }
 
-/** Radio pills adapting song excerpts to how far the learner has read. */
-function levelPicker(): string {
+/** Radio pills adapting figures to how far the learner has read. */
+function levelPicker(allLabel: string): string {
   const options: [string, string, string, boolean][] = [
     ['root', 'Root position only', 'chapter 2', false],
     ['root1', 'Root + 1st inversion', 'chapter 3', false],
-    ['all', 'As recorded', 'chapter 4+', true],
+    ['all', allLabel, 'chapter 4+', true],
   ];
   const pills = options
     .map(([value, label, hint, checked]) =>
@@ -82,6 +82,8 @@ function chapterPage(method: Method, index: number): string {
   const next = index < method.chapters.length - 1 ? method.chapters[index + 1] : null;
   const hasKeyedFigures = c.blocks.some(b => 'spec' in b && b.spec);
   const hasSongFigures = c.blocks.some(b => b.kind === 'diagramRow' && b.song);
+  // Real recordings get "As recorded"; computed drills get "All inversions"
+  const hasRecordings = c.blocks.some(b => b.kind === 'diagramRow' && b.video);
 
   const body = `<article class="chapter">
     <header class="chapter-header">
@@ -89,7 +91,7 @@ function chapterPage(method: Method, index: number): string {
       <h1>${c.title}</h1>
     </header>
     ${hasKeyedFigures ? keyPicker() : ''}
-    ${hasSongFigures ? levelPicker() : ''}
+    ${hasSongFigures ? levelPicker(hasRecordings ? 'As recorded' : 'All inversions') : ''}
     ${c.intro ? `<p class="chapter-intro">${c.intro}</p>` : ''}
     ${c.blocks.map(b => renderBlock(b, { interactive: true })).join('\n')}
     <nav class="pager">

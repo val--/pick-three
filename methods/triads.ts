@@ -11,7 +11,9 @@ import {
   nearestVoicing,
   RELATIVE_MINOR,
   SongChord,
+  songDiagrams,
 } from '../src/figures.js';
+import { TriadQuality } from '../src/theory/triads.js';
 
 /* ---------- Content helpers ---------- */
 
@@ -49,6 +51,35 @@ function songRow(
   });
   return { kind: 'diagramRow', diagrams, strum: true, song: chords, ...extra };
 }
+
+/**
+ * Workout row: the full circle of fifths on one string set, voiced with the
+ * chapter-5 rule (each chord nearest to the previous one). Uses the same
+ * data-song mechanism as song excerpts, so the level picker re-voices it.
+ */
+function workoutRow(
+  roots: string[],
+  quality: TriadQuality,
+  set: StringSet,
+  startFret: number,
+  extra: { title?: string; caption?: string } = {},
+): Block {
+  const chords: SongChord[] = roots.map((r, i) => ({
+    root: r, quality, set, inversion: 0,
+    nearFret: i === 0 ? startFret : undefined,
+  }));
+  return {
+    kind: 'diagramRow',
+    diagrams: songDiagrams(chords, [0, 1, 2]),
+    strum: true,
+    song: chords,
+    ...extra,
+  };
+}
+
+/** The circle of fifths, switching to flats at the enharmonic seam. */
+const FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B♭', 'F'];
+const MINOR_FIFTHS = ['A', 'E', 'B', 'F♯', 'C♯', 'G♯', 'E♭', 'B♭', 'F', 'C', 'G', 'D'];
 
 /* ---------- Generated appendix: the 12 keys ---------- */
 
@@ -234,10 +265,10 @@ export const triadsMethod: Method = {
         {
           kind: 'html',
           html: `<div class="songs-teaser">🎸 <strong>You can already play real music.</strong>
-            The final chapter, <a href="chapter-6.html">Triads in the wild</a>, adapts to your
-            level: set it to <em>Root position only</em> and five real riffs — Ghost, Ozzy
-            Osbourne, Dire Straits, Bob Marley, Daft Punk — are within reach with nothing more
-            than this chapter.</div>`,
+            <a href="chapter-6.html">Triads in the wild</a> adapts to your level: set it to
+            <em>Root position only</em> and five real riffs — Ghost, Ozzy Osbourne, Dire Straits,
+            Bob Marley, Daft Punk — are within reach with nothing more than this chapter. Then
+            make it stick with <a href="chapter-7.html">the daily workout</a>.</div>`,
         },
       ],
     },
@@ -553,6 +584,63 @@ export const triadsMethod: Method = {
             always), verse guitars that leave room for the voice, and any riff that sounds “small
             but precise”. When a part sounds like a keyboard stab, it is usually a triad — find the
             R and the rest falls under your fingers.</p>`,
+        },
+      ],
+    },
+
+    /* ---------------- Chapter 7 ---------------- */
+    {
+      title: 'The daily workout',
+      featured: true,
+      intro:
+        'Five minutes, twelve keys, every day. One trip around the circle of fifths, each chord one small move away from the last — the warm-up that turns knowledge into reflexes.',
+      blocks: [
+        {
+          kind: 'html',
+          html: `<p>The <strong>circle of fifths</strong> visits all twelve keys, each a fifth above
+            the last: C → G → D → A → E → B → F♯, then on through the flats — D♭ → A♭ → E♭ →
+            B♭ → F — and back home to C. It is <em>the</em> practice order: every key exactly once,
+            and always the same relationship between one chord and the next.</p>
+          <p>The rows below voice the whole trip with the chapter-5 rule — each chord takes the
+            inversion nearest to the previous one — so the “most logical order” is also the laziest
+            one for your hand. Use the level picker above to match how far you have read: the circle
+            works at every stage, it just costs more movement at the earlier ones.</p>`,
+        },
+        workoutRow(FIFTHS, 'major', SET_123, 3, {
+          title: 'The major circle, strings 3-2-1',
+          caption:
+            'Twelve keys without ever leaving frets 0-5: the three inversions rotate as you travel the circle, and no change moves the hand more than a couple of frets. Two beats per chord at 60 BPM — the full circle takes under a minute.',
+        }),
+        workoutRow(FIFTHS, 'major', [4, 3, 2], 3, {
+          title: 'The same circle, one story down (strings 4-3-2)',
+          caption:
+            'Identical journey, rounder voice. Notice how the shapes differ from strings 3-2-1 (the string-2 kink) while the logic stays the same.',
+        }),
+        workoutRow(MINOR_FIFTHS, 'minor', SET_123, 0, {
+          title: 'The minor circle, strings 3-2-1',
+          caption:
+            'Starting from Am at the nut, the chain climbs the neck steadily and lands on Dm at fret 10 — a built-in position-shifting exercise. Then play it backwards to come back down.',
+        }),
+        {
+          kind: 'exercise',
+          title: 'The five-minute routine',
+          html: `<ol>
+            <li><strong>Majors, strings 3-2-1</strong> — two beats per chord at 60 BPM, naming each
+              chord out loud. One full circle.</li>
+            <li><strong>Majors, strings 4-3-2</strong> — same thing, one story down.</li>
+            <li><strong>Minors, strings 3-2-1</strong> — up the neck, then read the row backwards
+              to come back down.</li>
+            <li>Read any row <em>right to left</em> and you are practicing the circle of
+              <strong>fourths</strong> — the direction chords actually move in most songs.</li>
+            <li>Clean at 60? Move to 80, then 100. Speed is a by-product, not the goal.</li>
+          </ol>`,
+        },
+        {
+          kind: 'tip',
+          html: `<p>Do the workout at <em>your</em> level, every day, rather than the full version
+            once a week. Root position only around the circle is already a complete workout — and
+            the day you switch the picker up a level, you will feel exactly what the new inversion
+            buys you.</p>`,
         },
       ],
     },
