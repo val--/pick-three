@@ -6,7 +6,16 @@
  *   inversions the learner has studied so far.
  */
 import { parseNote } from '../theory/notes.js';
-import { buildFigure, FigureDiagram, FigureSpec, SongChord, songDiagrams } from '../figures.js';
+import {
+  buildFigure,
+  circleChords,
+  CircleSpec,
+  FigureDiagram,
+  FigureSpec,
+  SongChord,
+  songDiagrams,
+} from '../figures.js';
+import { StringSet } from '../fretboard/fretboard.js';
 import { chordDiagramSVG, neckMapSVG } from '../render/svg.js';
 
 function cellsHTML(diagrams: FigureDiagram[], { strum = false } = {}): string {
@@ -68,6 +77,7 @@ if (rootSelect) {
 /* ------------------------------------------------------------------ */
 
 const LEVEL_KEY = 'guitar-teacher-level';
+const STRINGS_KEY = 'guitar-teacher-strings';
 
 type Level = 'all' | 'root' | 'root1';
 const LEVELS: Record<Exclude<Level, 'all'>, {
@@ -77,22 +87,41 @@ const LEVELS: Record<Exclude<Level, 'all'>, {
 }> = {
   root: {
     allowed: [0],
-    badge: 'adapted · root position only',
+    badge: 'root position only',
     caption: 'Adapted: every chord in root position, nearest to the previous one. '
       + 'Notice the extra hand travel compared to the full version — that is exactly what inversions buy you.',
   },
   root1: {
     allowed: [0, 1],
-    badge: 'adapted · root + 1st inversion',
+    badge: 'root + 1st inversion',
     caption: 'Adapted: root position and 1st inversion only, each chord nearest to the previous one. '
       + 'Compare with the full version to see what the 2nd inversion would save.',
   },
 };
 
+/** Which string sets the circle drill may rotate through. */
+type Strings = 'top' | 'treble' | 'all';
+const STRING_POOLS: Record<Strings, { sets: StringSet[]; badge: string }> = {
+  top: { sets: [[3, 2, 1]], badge: 'top strings only' },
+  treble: { sets: [[3, 2, 1], [4, 3, 2]], badge: '' }, // default pool
+  all: { sets: [[3, 2, 1], [4, 3, 2], [5, 4, 3], [6, 5, 4]], badge: 'all four string sets' },
+};
+
+const levelRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="level"]')];
+const stringsRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="strings"]')];
+
+const currentLevel = (): Level =>
+  (levelRadios.find(r => r.checked)?.value as Level) ?? 'all';
+const currentStrings = (): Strings =>
+  (stringsRadios.find(r => r.checked)?.value as Strings) ?? 'treble';
+
 /** Original markup of each song figure, captured before the first adaptation. */
 const originals = new Map<HTMLElement, { cells: string; caption: string | null; seq: string | null }>();
 
-function applyLevel(level: Level): void {
+function applyState(): void {
+  const level = currentLevel();
+  const strings = currentStrings();
+
   for (const figure of document.querySelectorAll<HTMLElement>('figure[data-song]')) {
     const cells = figure.querySelector('.diagram-cells')!;
     const caption = figure.querySelector('figcaption');
@@ -106,7 +135,13 @@ function applyLevel(level: Level): void {
     }
     figure.querySelector('.adapted-badge')?.remove();
 
-    if (level === 'all') {
+    // Only circle drills respond to the strings picker
+    const circle = figure.dataset.circle
+      ? JSON.parse(figure.dataset.circle) as CircleSpec
+      : null;
+    const isDefault = level === 'all' && (!circle || strings === 'treble');
+
+    if (isDefault) {
       const original = originals.get(figure)!;
       cells.innerHTML = original.cells;
       if (caption && original.caption !== null) caption.innerHTML = original.caption;
@@ -114,16 +149,25 @@ function applyLevel(level: Level): void {
       continue;
     }
 
-    const { allowed, badge, caption: captionText } = LEVELS[level];
-    const chords = JSON.parse(figure.dataset.song!) as SongChord[];
+    const allowed = level === 'all' ? ([0, 1, 2] as (0 | 1 | 2)[]) : LEVELS[level].allowed;
+    const chords = circle
+      ? circleChords(circle, STRING_POOLS[strings].sets)
+      : JSON.parse(figure.dataset.song!) as SongChord[];
     const diagrams = songDiagrams(chords, allowed);
     cells.innerHTML = cellsHTML(diagrams, { strum: true });
     if (rowButton) {
       rowButton.dataset.seq = JSON.stringify(diagrams.map(d => d.voicing.notes.map(n => n.midi)));
     }
     // Some captions are written to cover every level — leave those alone
-    if (caption && !figure.hasAttribute('data-keep-caption')) caption.textContent = captionText;
-    figure.insertAdjacentHTML('afterbegin', `<div class="adapted-badge">${badge}</div>`);
+    if (caption && level !== 'all' && !figure.hasAttribute('data-keep-caption')) {
+      caption.textContent = LEVELS[level].caption;
+    }
+    const badgeParts = [
+      ...(level !== 'all' ? [LEVELS[level].badge] : []),
+      ...(circle && strings !== 'treble' ? [STRING_POOLS[strings].badge] : []),
+    ];
+    figure.insertAdjacentHTML('afterbegin',
+      `<div class="adapted-badge">adapted · ${badgeParts.join(' · ')}</div>`);
   }
 }
 
@@ -144,18 +188,21 @@ document.addEventListener('click', event => {
     allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
 });
 
-const levelRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="level"]')];
-if (levelRadios.length) {
-  const saved = localStorage.getItem(LEVEL_KEY) as Level | null;
-  if (saved && (saved === 'all' || saved in LEVELS)) {
-    levelRadios.forEach(r => { r.checked = r.value === saved; });
-    if (saved !== 'all') applyLevel(saved);
+function wireRadios(radios: HTMLInputElement[], storageKey: string, valid: string[]): void {
+  if (!radios.length) return;
+  const saved = localStorage.getItem(storageKey);
+  if (saved && valid.includes(saved)) {
+    radios.forEach(r => { r.checked = r.value === saved; });
   }
-  for (const radio of levelRadios) {
+  for (const radio of radios) {
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
-      localStorage.setItem(LEVEL_KEY, radio.value);
-      applyLevel(radio.value as Level);
+      localStorage.setItem(storageKey, radio.value);
+      applyState();
     });
   }
 }
+
+wireRadios(levelRadios, LEVEL_KEY, ['all', 'root', 'root1']);
+wireRadios(stringsRadios, STRINGS_KEY, ['top', 'treble', 'all']);
+if (levelRadios.length || stringsRadios.length) applyState();

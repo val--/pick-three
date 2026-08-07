@@ -6,6 +6,8 @@ import { Block, Method } from '../src/render/html.js';
 import {
   buildFigure,
   chordName,
+  circleChords,
+  CircleSpec,
   FigureSpec,
   INV_SHORT,
   KEY_MAJOR,
@@ -83,19 +85,15 @@ const FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'F♯', 'D♭', 'A♭', 'E♭', 'B
 const MINOR_FIFTHS = ['A', 'E', 'B', 'F♯', 'C♯', 'G♯', 'E♭', 'B♭', 'F', 'C', 'G', 'D'];
 
 /**
- * The circle of fifths alternating between the two treble string sets —
- * where triads actually get played. A fifth up sits at the same fret one
- * string set lower (C at 5-5-3 on strings 3-2-1, G right next to it at
- * 5-4-3 on strings 4-3-2), so chords advance in same-fret pairs.
+ * The circle of fifths across string sets — a fifth up sits at the same
+ * fret one string set lower (C at 5-5-3 on strings 3-2-1, G right next to
+ * it at 5-4-3 on strings 4-3-2). Default pool: the two treble sets, where
+ * triads actually get played; the site's strings picker can rebuild it
+ * over one set or all four.
  */
+const CIRCLE_DRILL: CircleSpec = { roots: FIFTHS, quality: 'major', anchor: 3 };
 const TREBLE_SETS: StringSet[] = [[3, 2, 1], [4, 3, 2]];
-const IN_POSITION_FIFTHS: SongChord[] = FIFTHS.map((root, i) => ({
-  root,
-  quality: 'major',
-  set: TREBLE_SETS[i % 2],
-  inversion: 0,
-  nearFret: i === 0 ? 3 : undefined,
-}));
+const IN_POSITION_FIFTHS: SongChord[] = circleChords(CIRCLE_DRILL, TREBLE_SETS);
 
 /* ---------- Generated appendix: the 12 keys ---------- */
 
@@ -658,10 +656,11 @@ export const triadsMethod: Method = {
           diagrams: songDiagrams(IN_POSITION_FIFTHS, [0, 1, 2]),
           strum: true,
           song: IN_POSITION_FIFTHS,
+          circle: CIRCLE_DRILL,
           keepCaption: true,
-          title: 'The circle of fifths, across the treble string sets',
+          title: 'The circle of fifths, across the string sets',
           caption:
-            'With all inversions available, the whole circle fits between the nut and fret 5 — twelve keys, essentially zero position shifts. At root position only, it becomes a ladder: chords climb in same-fret pairs (C and G around fret 5, D and A around 7, E and B around 9…) all the way to B♭ and F at the top of the neck — every move two frets or less, always on the string sets you actually comp on. Read it right to left to climb back down (the circle of fourths, the direction chords move in most songs).',
+            'The one row you configure: the strings picker chooses the sets it rotates through, the level picker the inversions. The rule of thumb — the fewer sets and inversions you allow, the more the hand travels. With both treble sets and all inversions, the whole circle fits between the nut and fret 5; at root position only it climbs in same-fret pairs (C and G around fret 5, D and A around 7…); on a single set it becomes the twelve-address map from the first row. Read it right to left to climb back down (the circle of fourths, the direction chords move in most songs).',
         },
         {
           kind: 'exercise',

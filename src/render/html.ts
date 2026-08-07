@@ -1,5 +1,5 @@
 import { Voicing } from '../fretboard/fretboard.js';
-import { FigureSpec, SongChord } from '../figures.js';
+import { CircleSpec, FigureSpec, SongChord } from '../figures.js';
 import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 
 /**
@@ -12,7 +12,9 @@ export type Block =
   | { kind: 'legend' }
   | { kind: 'diagramRow'; title?: string; caption?: string; diagrams: { voicing: Voicing; title: string }[]; spec?: FigureSpec; strum?: boolean; song?: SongChord[]; video?: SongVideo;
       /** Keep the caption when the level picker re-voices the row (caption written for all levels). */
-      keepCaption?: boolean }
+      keepCaption?: boolean;
+      /** Circle drill data: lets the site's strings picker rebuild the row over another set pool. */
+      circle?: CircleSpec }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
   | { kind: 'tip'; html: string };
@@ -87,7 +89,7 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
             <span>play the row</span>
           </div>`
         : '';
-      return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}${interactive && block.keepCaption ? ' data-keep-caption' : ''}>
+      return `<figure class="diagram-row"${jsonAttr('spec', block.spec, interactive)}${jsonAttr('song', block.song, interactive)}${jsonAttr('circle', block.circle, interactive)}${interactive && block.keepCaption ? ' data-keep-caption' : ''}>
         ${block.title ? `<h4>${block.title}</h4>` : ''}
         ${rowSeq}
         <div class="diagram-cells">${cells}</div>

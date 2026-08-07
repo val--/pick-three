@@ -92,6 +92,27 @@ export interface SongChord {
 }
 
 /**
+ * A circle drill: roots in circle order, string sets rotating through the
+ * allowed pool. Powers the workout's configurable in-position row.
+ */
+export interface CircleSpec {
+  roots: string[];
+  quality: TriadQuality;
+  /** Fret area where the first chord anchors. */
+  anchor: number;
+}
+
+export function circleChords(spec: CircleSpec, sets: StringSet[]): SongChord[] {
+  return spec.roots.map((root, i) => ({
+    root,
+    quality: spec.quality,
+    set: sets[i % sets.length],
+    inversion: 0,
+    nearFret: i === 0 ? spec.anchor : undefined,
+  }));
+}
+
+/**
  * A song excerpt re-voiced within the allowed inversions: each chord takes
  * the nearest allowed voicing (the chapter-5 rule), anchored on the first
  * chord's original position. Powers the "adapt to your level" control.

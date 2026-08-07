@@ -80,12 +80,31 @@ function levelPicker(allLabel: string): string {
   </div>`;
 }
 
+/** Radio pills choosing which string sets the circle drill may use. */
+function stringsPicker(): string {
+  const options: [string, string, boolean][] = [
+    ['top', 'Top strings (3-2-1)', false],
+    ['treble', 'Both treble sets', true],
+    ['all', 'All four sets', false],
+  ];
+  const pills = options
+    .map(([value, label, checked]) =>
+      `<label><input type="radio" name="strings" value="${value}"${checked ? ' checked' : ''}> ${label}</label>`)
+    .join('');
+  return `<div class="level-picker strings-picker">
+    <span class="level-label">🎸 Strings:</span>
+    <div class="level-options" role="radiogroup" aria-label="String sets for the circle drill">${pills}</div>
+    <span class="key-hint">applies to the in-position circle at the bottom of the page</span>
+  </div>`;
+}
+
 function chapterPage(method: Method, index: number): string {
   const c = method.chapters[index];
   const prev = index > 0 ? method.chapters[index - 1] : null;
   const next = index < method.chapters.length - 1 ? method.chapters[index + 1] : null;
   const hasKeyedFigures = c.blocks.some(b => 'spec' in b && b.spec);
   const hasSongFigures = c.blocks.some(b => b.kind === 'diagramRow' && b.song);
+  const hasCircleDrill = c.blocks.some(b => b.kind === 'diagramRow' && b.circle);
   // Real recordings get "As recorded"; computed drills get "All inversions"
   const hasRecordings = c.blocks.some(b => b.kind === 'diagramRow' && b.video);
 
@@ -96,6 +115,7 @@ function chapterPage(method: Method, index: number): string {
     </header>
     ${hasKeyedFigures ? keyPicker() : ''}
     ${hasSongFigures ? levelPicker(hasRecordings ? 'As recorded' : 'All inversions') : ''}
+    ${hasCircleDrill ? stringsPicker() : ''}
     ${c.intro ? `<p class="chapter-intro">${c.intro}</p>` : ''}
     ${c.blocks.map(b => renderBlock(b, { interactive: true })).join('\n')}
     <nav class="pager">
