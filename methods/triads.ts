@@ -63,7 +63,7 @@ function workoutRow(
   quality: TriadQuality,
   set: StringSet,
   startFret: number,
-  extra: { title?: string; caption?: string } = {},
+  extra: { title?: string; caption?: string; keepCaption?: boolean } = {},
 ): Block {
   const chords: SongChord[] = roots.map((r, i) => ({
     root: r, quality, set, inversion: 0,
@@ -622,8 +622,9 @@ export const triadsMethod: Method = {
         },
         workoutRow(FIFTHS, 'major', SET_123, 3, {
           title: 'The major circle, strings 3-2-1',
+          keepCaption: true,
           caption:
-            'Twelve keys without ever leaving frets 0-5: the three inversions rotate as you travel the circle, and no change moves the hand more than a couple of frets. Two beats per chord at 60 BPM — the full circle takes under a minute.',
+            'With inversions, twelve keys without ever leaving frets 0-5: the three shapes rotate as you travel the circle, and no change moves the hand more than a couple of frets. At root position only there is just one shape per string set, so the same shape shows up at twelve frets — at that level this row trains your map of the neck (where the twelve roots live), not your fingers. Two beats per chord at 60 BPM.',
         }),
         workoutRow(FIFTHS, 'major', [4, 3, 2], 3, {
           title: 'The same circle, one story down (strings 4-3-2)',
