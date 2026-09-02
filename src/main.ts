@@ -1,4 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { renderMethod } from './render/html.js';
 import { renderSite } from './render/site.js';
 import { htmlToPdf } from './pdf/export.js';
@@ -21,15 +22,15 @@ for (const file of renderSite(triadsMethod)) {
 // Client bundle: the root-note picker reuses the domain code as-is
 const { build } = await import('esbuild');
 await build({
-  entryPoints: [new URL('client/keyed.ts', import.meta.url).pathname],
+  entryPoints: [fileURLToPath(new URL('client/keyed.ts', import.meta.url))],
   bundle: true,
   minify: true,
   format: 'iife',
-  outfile: new URL('keyed.js', SITE_DIR).pathname,
+  outfile: fileURLToPath(new URL('keyed.js', SITE_DIR)),
 });
 console.log(`Site: ${SITE_DIR.pathname}index.html`);
 
 // The full-method PDF ships with the site (downloadable from the home page)
-const pdfPath = new URL('triads.pdf', SITE_DIR);
-await htmlToPdf(html, pdfPath.pathname);
-console.log(`PDF : ${pdfPath.pathname}`);
+const pdfPath = fileURLToPath(new URL('triads.pdf', SITE_DIR));
+await htmlToPdf(html, pdfPath);
+console.log(`PDF : ${pdfPath}`);

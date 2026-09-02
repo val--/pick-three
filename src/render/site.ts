@@ -1,4 +1,4 @@
-import { Chapter, Method, renderBlock } from './html.js';
+import { Chapter, Method, renderBlock, STRING_SET_CHOICES } from './html.js';
 import { faviconDataUri, pickMark } from './logo.js';
 
 const SITE_NAME = 'Pick Three';
@@ -98,6 +98,17 @@ function stringsPicker(): string {
   </div>`;
 }
 
+/** Radio pills choosing which string set the progression explorer voices its chords on. */
+function progressionStringsPicker(): string {
+  const pills = STRING_SET_CHOICES
+    .map(([value, , label], i) => `<label><input type="radio" name="pstrings" value="${value}"${i === 0 ? ' checked' : ''}> ${label}</label>`)
+    .join('');
+  return `<div class="level-picker">
+    <span class="level-label">🎸 Strings:</span>
+    <div class="level-options" role="radiogroup" aria-label="String set for the progressions">${pills}</div>
+  </div>`;
+}
+
 function chapterPage(method: Method, index: number): string {
   const c = method.chapters[index];
   const prev = index > 0 ? method.chapters[index - 1] : null;
@@ -105,6 +116,7 @@ function chapterPage(method: Method, index: number): string {
   const hasKeyedFigures = c.blocks.some(b => 'spec' in b && b.spec);
   const hasSongFigures = c.blocks.some(b => b.kind === 'diagramRow' && b.song);
   const hasCircleDrill = c.blocks.some(b => b.kind === 'diagramRow' && b.circle);
+  const hasProgressionExplorer = c.blocks.some(b => b.kind === 'progressionExplorer');
   // Real recordings get "As recorded"; computed drills get "All inversions"
   const hasRecordings = c.blocks.some(b => b.kind === 'diagramRow' && b.video);
 
@@ -114,8 +126,9 @@ function chapterPage(method: Method, index: number): string {
       <h1>${c.title}</h1>
     </header>
     ${hasKeyedFigures ? keyPicker() : ''}
-    ${hasSongFigures ? levelPicker(hasRecordings ? 'As recorded' : 'All inversions') : ''}
+    ${hasSongFigures || hasProgressionExplorer ? levelPicker(hasRecordings ? 'As recorded' : 'All inversions') : ''}
     ${hasCircleDrill ? stringsPicker() : ''}
+    ${hasProgressionExplorer ? progressionStringsPicker() : ''}
     ${c.intro ? `<p class="chapter-intro">${c.intro}</p>` : ''}
     ${c.blocks.map(b => renderBlock(b, { interactive: true })).join('\n')}
     <nav class="pager">
@@ -307,6 +320,35 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 .level-options input { position: absolute; opacity: 0; pointer-events: none; }
 .level-options em { font-style: italic; opacity: 0.75; font-size: 12.5px; }
 
+/* ---- Progression explorer (famous progressions) ---- */
+.progression-explorer {
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  padding: 18px 20px; margin: 0 0 22px;
+}
+.explorer-controls {
+  display: flex; flex-wrap: wrap; gap: 14px 22px;
+  font-family: Helvetica, Arial, sans-serif; font-size: 15px;
+}
+.explorer-controls label { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.explorer-controls select {
+  font: inherit; font-weight: 700; color: var(--accent);
+  padding: 6px 10px; border: 1.5px solid var(--accent); border-radius: 8px;
+  background: #fff; cursor: pointer;
+}
+.explorer-controls select:disabled {
+  color: var(--faded); border-color: var(--line); cursor: not-allowed;
+}
+#explorer-blurb {
+  margin-top: 14px; font-size: 15.5px;
+}
+#explorer-blurb:empty, #explorer-keysong:empty, #explorer-results:empty { margin: 0; }
+#explorer-results .diagram-row:first-of-type { margin-top: 22px; }
+.known-from { font-size: 14px; color: var(--faded); }
+#explorer-keysong, .keysong {
+  font-size: 14.5px; font-weight: 700; color: var(--accent);
+  margin-top: 8px;
+}
+
 .adapted-badge {
   display: inline-block; margin-bottom: 10px;
   font-family: Helvetica, Arial, sans-serif;
@@ -362,19 +404,19 @@ h4 { font-size: 16px; margin: 0 0 8px; }
    height:auto + viewBox preserve proportions. */
 figure { margin: 26px 0; }
 .diagram-cells {
-  display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end;
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;
 }
 .diagram-cell {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   background: #fff; border: 1px solid var(--line); border-radius: 10px;
-  padding: 14px 14px 12px;
+  padding: 12px 12px 10px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .diagram-cell.now-playing {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
 }
-.diagram-cell svg { width: 186px; height: auto; }
+.diagram-cell svg { width: 158px; height: auto; }
 figcaption { font-size: 14px; color: var(--faded); font-style: italic; margin-top: 10px; }
 .neck-map { position: relative; }
 .neck-map-scroll { overflow-x: auto; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
@@ -456,7 +498,7 @@ th { font-family: Helvetica, Arial, sans-serif; font-size: 13px; background: #f1
   @page { size: A4; margin: 14mm 12mm; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background: #fff; }
-  .topbar, .key-picker, .level-picker, .play, .row-play, .video-cta,
+  .topbar, .key-picker, .level-picker, .explorer-controls, .play, .row-play, .video-cta,
   .pager, .site-footer, .hero-pdf { display: none !important; }
   main { max-width: 100%; padding: 0; }
   figure, .diagram-cell, .exercise, .tip, .songs-teaser { break-inside: avoid; }

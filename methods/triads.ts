@@ -17,6 +17,7 @@ import {
   songDiagrams,
 } from '../src/figures.js';
 import { TriadQuality } from '../src/theory/triads.js';
+import { progressionsChapter } from './progressions.js';
 
 /* ---------- Content helpers ---------- */
 
@@ -686,5 +687,8 @@ export const triadsMethod: Method = {
         },
       ],
     },
+
+    /* ---------------- Chapter 8 ---------------- */
+    progressionsChapter,
   ],
 };

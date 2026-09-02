@@ -1,5 +1,6 @@
-import { Voicing } from '../fretboard/fretboard.js';
-import { CircleSpec, FigureSpec, SongChord } from '../figures.js';
+import { StringSet, Voicing } from '../fretboard/fretboard.js';
+import { parseNote } from '../theory/notes.js';
+import { ChordRef, CircleSpec, FigureSpec, positionLabel, progressionPositions, SongChord } from '../figures.js';
 import { chordDiagramSVG, degreeLegendSVG, neckMapSVG } from './svg.js';
 
 /**
@@ -17,7 +18,38 @@ export type Block =
       circle?: CircleSpec }
   | { kind: 'neckMap'; title?: string; caption?: string; voicings: Voicing[]; maxFret?: number; spec?: FigureSpec }
   | { kind: 'exercise'; title: string; html: string }
-  | { kind: 'tip'; html: string };
+  | { kind: 'tip'; html: string }
+  /**
+   * Two mandatory dropdowns — progression, then chord set (key) — plus a
+   * string-set dropdown (defaulting to the 3 highest strings) that reveal
+   * up to 3 voice-led positions for the chosen combination. Nothing is
+   * pre-rendered for the site: the site builds it client-side once a
+   * progression and a chord set are chosen. The static PDF instead shows
+   * every progression at its default key and string set, all of its
+   * positions, one after another.
+   */
+  | { kind: 'progressionExplorer'; progressions: ProgressionDef[] };
+
+export interface ProgressionDef {
+  id: string;
+  /** Roman-numeral formula, e.g. "i – ♭VII – ♭III – ♭VI". */
+  label: string;
+  /** Short intro HTML shown once the progression is picked (or, in print, above its diagrams). */
+  blurb: string;
+  chords: ChordRef[];
+  /** Key used for the static PDF rendering only. */
+  defaultRoot: string;
+  /** Real song known to use this exact chord set in this exact key — shown once that root is picked. */
+  keySongs?: Record<string, string>;
+}
+
+/** The 4 string sets a progression can be voiced on, highest-pitched first (the site's default). */
+export const STRING_SET_CHOICES: [string, StringSet, string][] = [
+  ['3,2,1', [3, 2, 1], 'Strings 3-2-1 (highest)'],
+  ['4,3,2', [4, 3, 2], 'Strings 4-3-2'],
+  ['5,4,3', [5, 4, 3], 'Strings 5-4-3'],
+  ['6,5,4', [6, 5, 4], 'Strings 6-5-4 (lowest)'],
+];
 
 export interface Chapter {
   title: string;
@@ -114,6 +146,52 @@ export function renderBlock(block: Block, { interactive = false } = {}): string 
       </div>`;
     case 'tip':
       return `<div class="tip">${block.html}</div>`;
+    case 'progressionExplorer': {
+      if (!interactive) {
+        // Static book rendering: every progression, at its default key and string set, every position.
+        const defaultSet = STRING_SET_CHOICES[0][1];
+        return block.progressions
+          .map(p => {
+            const positions = progressionPositions(p.chords, defaultSet, parseNote(p.defaultRoot));
+            const rows = positions
+              .map((diagrams, i) => {
+                const cells = diagrams
+                  .map(d => `<div class="diagram-cell">${chordDiagramSVG(d.voicing, { title: d.title })}</div>`)
+                  .join('');
+                return `<h4>${positionLabel(i, positions.length)}</h4><div class="diagram-cells">${cells}</div>`;
+              })
+              .join('\n');
+            const keySong = p.keySongs?.[p.defaultRoot];
+            const keySongHtml = keySong ? `<p class="keysong">🎵 ${keySong}</p>` : '';
+            return `${p.blurb}${keySongHtml}${rows}`;
+          })
+          .join('\n');
+      }
+      const payload = JSON.stringify(
+        block.progressions.map(p => ({
+          id: p.id, label: p.label, blurb: p.blurb, chords: p.chords, keySongs: p.keySongs ?? {},
+        })),
+      ).replace(/"/g, '&quot;');
+      const options = block.progressions.map(p => `<option value="${p.id}">${p.label}</option>`).join('');
+      return `<div class="progression-explorer" data-progressions="${payload}">
+        <div class="explorer-controls">
+          <label>Progression
+            <select id="progression-select">
+              <option value="" selected disabled>Choose a progression…</option>
+              ${options}
+            </select>
+          </label>
+          <label>Chord set
+            <select id="chordset-select" disabled>
+              <option value="" selected disabled>Choose a chord set…</option>
+            </select>
+          </label>
+        </div>
+        <div id="explorer-blurb"></div>
+        <div id="explorer-keysong"></div>
+        <div id="explorer-results"></div>
+      </div>`;
+    }
   }
 }
 

@@ -45,7 +45,7 @@ export type FigureSpec =
   | { kind: 'single'; chord: ChordRef; set: StringSet; inversion: 0 | 1 | 2 }
   | { kind: 'acrossSets'; chord: ChordRef; inversion: 0 | 1 | 2 }
   | { kind: 'alongNeck'; chord: ChordRef; set: StringSet; fromFret?: number }
-  | { kind: 'progression'; chords: ChordRef[]; set: StringSet; startFret: number }
+  | { kind: 'progression'; chords: ChordRef[]; set: StringSet; startFret: number; allowed?: readonly (0 | 1 | 2)[] }
   | { kind: 'openChords'; chords: ChordRef[] };
 
 export interface FigureDiagram {
@@ -55,6 +55,46 @@ export interface FigureDiagram {
 
 export function chordName(t: Triad): string {
   return noteName(t.root) + QUALITY_SUFFIX[t.quality];
+}
+
+/** Chord names for a progression in a given key — e.g. ["Bm", "A", "D", "G"]. */
+export function progressionChordNames(chords: ChordRef[], root: Note): string[] {
+  return chords.map(cr => chordName(chordOf(root, cr)));
+}
+
+/**
+ * Up to 3 well-spread voicings of a progression in a given key: the chain
+ * (chapter-5 nearest-voicing rule) anchored at increasing neck positions,
+ * keeping only the ones whose average fret differs enough from every
+ * position already kept. Some progressions only have room for 2.
+ */
+export function progressionPositions(
+  chords: ChordRef[],
+  set: StringSet,
+  root: Note,
+  allowed: readonly (0 | 1 | 2)[] = [0, 1, 2],
+): FigureDiagram[][] {
+  const center = (diagrams: FigureDiagram[]) =>
+    diagrams.reduce((sum, d) => sum + d.voicing.minFret, 0) / diagrams.length;
+  const MIN_GAP = 2.5;
+
+  const accepted: FigureDiagram[][] = [];
+  const centers: number[] = [];
+  for (let anchor = 0; anchor <= 15 && accepted.length < 3; anchor++) {
+    const diagrams = buildFigure({ kind: 'progression', chords, set, startFret: anchor, allowed }, root);
+    const c = center(diagrams);
+    if (centers.some(prev => Math.abs(prev - c) < MIN_GAP)) continue;
+    centers.push(c);
+    accepted.push(diagrams);
+  }
+  return accepted;
+}
+
+/** Label for the Nth of `total` voicings of a progression (1-3, low to high on the neck). */
+export function positionLabel(i: number, total: number): string {
+  if (total <= 1) return 'Voicing';
+  if (total === 2) return i === 0 ? 'Lower position' : 'Higher position';
+  return ['Lower position', 'Mid position', 'Higher position'][i];
 }
 
 function diagramTitle(v: Voicing): string {
@@ -191,8 +231,9 @@ export function buildFigure(spec: FigureSpec, root: Note): FigureDiagram[] {
     }
     case 'progression': {
       let ref = spec.startFret;
+      const allowed = spec.allowed ?? [0, 1, 2];
       return spec.chords.map(cr => {
-        const v = nearestVoicing(chordOf(root, cr), spec.set, ref);
+        const v = nearestVoicing(chordOf(root, cr), spec.set, ref, allowed);
         ref = v.minFret;
         return { voicing: v, title: diagramTitle(v) };
       });

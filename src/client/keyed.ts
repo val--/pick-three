@@ -8,10 +8,14 @@
 import { parseNote } from '../theory/notes.js';
 import {
   buildFigure,
+  ChordRef,
   circleChords,
   CircleSpec,
   FigureDiagram,
   FigureSpec,
+  positionLabel,
+  progressionChordNames,
+  progressionPositions,
   SongChord,
   songDiagrams,
 } from '../figures.js';
@@ -206,3 +210,108 @@ function wireRadios(radios: HTMLInputElement[], storageKey: string, valid: strin
 wireRadios(levelRadios, LEVEL_KEY, ['all', 'root', 'root1']);
 wireRadios(stringsRadios, STRINGS_KEY, ['top', 'treble', 'all']);
 if (levelRadios.length || stringsRadios.length) applyState();
+
+/* ------------------------------------------------------------------ */
+/*  Progression explorer (famous progressions)                         */
+/*  Progression and chord set (key) are mandatory; the string set has  */
+/*  a default (the 3 highest strings) and just re-voices the result.   */
+/* ------------------------------------------------------------------ */
+
+/** Available roots for the chord-set dropdown: same 12 keys, every progression. */
+const ROOT_CHOICES: [string, string][] = [
+  ['C', 'C'], ['Db', 'D♭'], ['D', 'D'], ['Eb', 'E♭'], ['E', 'E'], ['F', 'F'],
+  ['F#', 'F♯'], ['G', 'G'], ['Ab', 'A♭'], ['A', 'A'], ['Bb', 'B♭'], ['B', 'B'],
+];
+
+const PSTRINGS_KEY = 'guitar-teacher-pstrings';
+
+const explorer = document.querySelector<HTMLElement>('.progression-explorer');
+if (explorer) {
+  const progressions = JSON.parse(explorer.dataset.progressions!) as {
+    id: string;
+    label: string;
+    blurb: string;
+    chords: ChordRef[];
+    keySongs: Record<string, string>;
+  }[];
+  const progSelect = explorer.querySelector<HTMLSelectElement>('#progression-select')!;
+  const keySelect = explorer.querySelector<HTMLSelectElement>('#chordset-select')!;
+  const pstringsRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="pstrings"]')];
+  const blurb = explorer.querySelector<HTMLElement>('#explorer-blurb')!;
+  const keysong = explorer.querySelector<HTMLElement>('#explorer-keysong')!;
+  const results = explorer.querySelector<HTMLElement>('#explorer-results')!;
+
+  const currentSet = (): StringSet => {
+    const value = pstringsRadios.find(r => r.checked)?.value ?? '3,2,1';
+    return value.split(',').map(Number) as StringSet;
+  };
+
+  const rowHTML = (diagrams: FigureDiagram[], title: string): string => `
+    <figure class="diagram-row">
+      <h4>${title}</h4>
+      <div class="row-play">
+        <button class="play" data-seq="${JSON.stringify(diagrams.map(d => d.voicing.notes.map(n => n.midi))).replace(/"/g, '&quot;')}" aria-label="Play the whole row" title="Play the whole row">▶</button>
+        <span>play the row</span>
+      </div>
+      <div class="diagram-cells">${cellsHTML(diagrams)}</div>
+    </figure>`;
+
+  const currentAllowed = (): (0 | 1 | 2)[] => {
+    const level = currentLevel();
+    return level === 'all' ? [0, 1, 2] : LEVELS[level].allowed;
+  };
+
+  function renderResults(): void {
+    results.innerHTML = '';
+    const prog = progressions.find(p => p.id === progSelect.value);
+    if (!prog || !keySelect.value) return;
+    const positions = progressionPositions(prog.chords, currentSet(), parseNote(keySelect.value), currentAllowed());
+    results.innerHTML = positions
+      .map((diagrams, i) => rowHTML(diagrams, positionLabel(i, positions.length)))
+      .join('');
+  }
+
+  progSelect.addEventListener('change', () => {
+    blurb.innerHTML = '';
+    keysong.innerHTML = '';
+    results.innerHTML = '';
+    keySelect.innerHTML = '<option value="" selected disabled>Choose a chord set…</option>';
+    const prog = progressions.find(p => p.id === progSelect.value);
+    keySelect.disabled = !prog;
+    if (!prog) return;
+    blurb.innerHTML = prog.blurb;
+    for (const [value, label] of ROOT_CHOICES) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = progressionChordNames(prog.chords, parseNote(value)).join(' – ');
+      keySelect.appendChild(opt);
+    }
+  });
+
+  keySelect.addEventListener('change', () => {
+    const prog = progressions.find(p => p.id === progSelect.value);
+    const song = prog?.keySongs[keySelect.value];
+    keysong.innerHTML = song ? `🎵 ${song}` : '';
+    renderResults();
+  });
+
+  if (pstringsRadios.length) {
+    const saved = localStorage.getItem(PSTRINGS_KEY);
+    if (saved && pstringsRadios.some(r => r.value === saved)) {
+      pstringsRadios.forEach(r => { r.checked = r.value === saved; });
+    }
+    for (const radio of pstringsRadios) {
+      radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        localStorage.setItem(PSTRINGS_KEY, radio.value);
+        renderResults();
+      });
+    }
+  }
+
+  // The shared level picker (wired below) already persists the choice and
+  // re-voices song excerpts — it also re-voices this explorer's results.
+  for (const radio of levelRadios) {
+    radio.addEventListener('change', () => { if (radio.checked) renderResults(); });
+  }
+}

@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate": "tsx src/main.ts",
     "typecheck": "tsc --noEmit",
-    "serve": "python3 -m http.server 8137 -d output/site"
+    "serve": "node scripts/serve.mjs"
   },
   "keywords": [],
   "author": "",
