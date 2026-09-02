@@ -12,22 +12,31 @@ const CHROME_CANDIDATES = [
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 ].filter((p): p is string => !!p);
 
-async function findChrome(): Promise<string> {
+interface Browser {
+  executablePath: string;
+  args?: string[];
+}
+
+/**
+ * A local Chrome/Chromium/Edge install if one exists (every dev machine and
+ * most CI images); otherwise the serverless Chromium binary from
+ * @sparticuz/chromium, which ships no browser of its own (e.g. Vercel).
+ */
+async function findChrome(): Promise<Browser> {
   const { access } = await import('node:fs/promises');
   for (const path of CHROME_CANDIDATES) {
     try {
       await access(path);
-      return path;
+      return { executablePath: path };
     } catch { /* next candidate */ }
   }
-  throw new Error('Chrome not found — set CHROME_PATH');
+  const chromium = (await import('@sparticuz/chromium')).default;
+  return { executablePath: await chromium.executablePath(), args: chromium.args };
 }
 
 export async function htmlToPdf(html: string, outputPath: string): Promise<void> {
-  const browser = await puppeteer.launch({
-    executablePath: await findChrome(),
-    headless: true,
-  });
+  const { executablePath, args } = await findChrome();
+  const browser = await puppeteer.launch({ executablePath, args, headless: true });
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'load' });
