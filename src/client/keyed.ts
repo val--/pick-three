@@ -13,6 +13,9 @@ import {
   CircleSpec,
   FigureDiagram,
   FigureSpec,
+  nearNutPosition,
+  OpenChordDiagram,
+  openChordProgression,
   positionLabel,
   progressionChordNames,
   progressionPositions,
@@ -22,9 +25,12 @@ import {
 import { StringSet } from '../fretboard/fretboard.js';
 import { chordDiagramSVG, neckMapSVG } from '../render/svg.js';
 
-function cellsHTML(diagrams: FigureDiagram[], { strum = false } = {}): string {
+function cellsHTML(
+  diagrams: (FigureDiagram & { fallback?: boolean })[],
+  { strum = false } = {},
+): string {
   return diagrams
-    .map(d => `<div class="diagram-cell">${chordDiagramSVG(d.voicing, { title: d.title })}
+    .map(d => `<div class="diagram-cell${d.fallback ? ' no-open-shape' : ''}">${chordDiagramSVG(d.voicing, { title: d.title })}
       <button class="play" data-notes="${d.voicing.notes.map(n => n.midi).join(',')}"${strum ? ' data-strum' : ''} aria-label="Listen to ${d.title}" title="Listen">▶</button>
     </div>`)
     .join('');
@@ -224,6 +230,7 @@ const ROOT_CHOICES: [string, string][] = [
 ];
 
 const PSTRINGS_KEY = 'guitar-teacher-pstrings';
+const PSHAPES_KEY = 'guitar-teacher-pshapes';
 
 const explorer = document.querySelector<HTMLElement>('.progression-explorer');
 if (explorer) {
@@ -237,9 +244,14 @@ if (explorer) {
   const progSelect = explorer.querySelector<HTMLSelectElement>('#progression-select')!;
   const keySelect = explorer.querySelector<HTMLSelectElement>('#chordset-select')!;
   const pstringsRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="pstrings"]')];
+  const pshapesRadios = [...document.querySelectorAll<HTMLInputElement>('input[name="pshapes"]')];
   const blurb = explorer.querySelector<HTMLElement>('#explorer-blurb')!;
   const keysong = explorer.querySelector<HTMLElement>('#explorer-keysong')!;
   const results = explorer.querySelector<HTMLElement>('#explorer-results')!;
+
+  type Shape = 'neck' | 'nut' | 'open';
+  const currentShape = (): Shape =>
+    (pshapesRadios.find(r => r.checked)?.value as Shape) ?? 'neck';
 
   const currentSet = (): StringSet => {
     const value = pstringsRadios.find(r => r.checked)?.value ?? '3,2,1';
@@ -261,14 +273,44 @@ if (explorer) {
     return level === 'all' ? [0, 1, 2] : LEVELS[level].allowed;
   };
 
+  /**
+   * Which chords of an open-chord row had no standard shape — named in a
+   * note under the row, so a fallback triad never looks like a mistake.
+   */
+  const missingShapesNote = (diagrams: OpenChordDiagram[]): string => {
+    const missing = diagrams.filter(d => d.fallback).map(d => d.title.split(' \u00b7 ')[0]);
+    if (!missing.length) return '';
+    const list = missing.join(', ');
+    const verb = missing.length > 1 ? 'have' : 'has';
+    return `<p class="shape-note">${list} ${verb} no standard open shape \u2014
+      shown as the lowest triad on the chosen strings instead.</p>`;
+  };
+
   function renderResults(): void {
     results.innerHTML = '';
     const prog = progressions.find(p => p.id === progSelect.value);
     if (!prog || !keySelect.value) return;
-    const positions = progressionPositions(prog.chords, currentSet(), parseNote(keySelect.value), currentAllowed());
-    results.innerHTML = positions
-      .map((diagrams, i) => rowHTML(diagrams, positionLabel(i, positions.length)))
-      .join('');
+    const root = parseNote(keySelect.value);
+    const set = currentSet();
+
+    switch (currentShape()) {
+      case 'nut': {
+        const diagrams = nearNutPosition(prog.chords, set, root);
+        results.innerHTML = rowHTML(diagrams, 'Near the nut');
+        return;
+      }
+      case 'open': {
+        const diagrams = openChordProgression(prog.chords, set, root);
+        results.innerHTML = rowHTML(diagrams, 'Open chords') + missingShapesNote(diagrams);
+        return;
+      }
+      default: {
+        const positions = progressionPositions(prog.chords, set, root, currentAllowed());
+        results.innerHTML = positions
+          .map((diagrams, i) => rowHTML(diagrams, positionLabel(i, positions.length)))
+          .join('');
+      }
+    }
   }
 
   progSelect.addEventListener('change', () => {
@@ -295,19 +337,23 @@ if (explorer) {
     renderResults();
   });
 
-  if (pstringsRadios.length) {
-    const saved = localStorage.getItem(PSTRINGS_KEY);
-    if (saved && pstringsRadios.some(r => r.value === saved)) {
-      pstringsRadios.forEach(r => { r.checked = r.value === saved; });
+  const wireExplorerRadios = (radios: HTMLInputElement[], storageKey: string): void => {
+    if (!radios.length) return;
+    const saved = localStorage.getItem(storageKey);
+    if (saved && radios.some(r => r.value === saved)) {
+      radios.forEach(r => { r.checked = r.value === saved; });
     }
-    for (const radio of pstringsRadios) {
+    for (const radio of radios) {
       radio.addEventListener('change', () => {
         if (!radio.checked) return;
-        localStorage.setItem(PSTRINGS_KEY, radio.value);
+        localStorage.setItem(storageKey, radio.value);
         renderResults();
       });
     }
-  }
+  };
+
+  wireExplorerRadios(pstringsRadios, PSTRINGS_KEY);
+  wireExplorerRadios(pshapesRadios, PSHAPES_KEY);
 
   // The shared level picker (wired below) already persists the choice and
   // re-voices song excerpts — it also re-voices this explorer's results.

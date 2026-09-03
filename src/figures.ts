@@ -90,6 +90,47 @@ export function progressionPositions(
   return accepted;
 }
 
+/**
+ * The progression at the nut: the chapter-5 chain anchored at fret 0 with
+ * every inversion allowed, whatever level the reader has selected. A
+ * root-position-only chain is often forced up the neck — G on strings 3-2-1
+ * has no close root-position voicing below fret 12, since the open-string
+ * one spans 10 frets — and this is the escape hatch for that.
+ */
+export function nearNutPosition(
+  chords: ChordRef[],
+  set: StringSet,
+  root: Note,
+): FigureDiagram[] {
+  return buildFigure({ kind: 'progression', chords, set, startFret: 0, allowed: [0, 1, 2] }, root);
+}
+
+/** A progression diagram that had to fall back to a triad for want of an open shape. */
+export interface OpenChordDiagram extends FigureDiagram {
+  /** No standard open shape exists for this chord — `voicing` is its lowest triad instead. */
+  fallback: boolean;
+}
+
+/**
+ * The progression played with standard open chords. Only 8 shapes exist
+ * (C D E G A, Dm Em Am), so most keys leave gaps: F in C, Bm in D, B and
+ * C#m in E. Those chords fall back to their lowest triad on `set` and are
+ * flagged, rather than dropping out of the row and breaking the count.
+ */
+export function openChordProgression(
+  chords: ChordRef[],
+  set: StringSet,
+  root: Note,
+): OpenChordDiagram[] {
+  return chords.map(cr => {
+    const t = chordOf(root, cr);
+    const open = openChordVoicing(t);
+    if (open) return { voicing: open, title: `${chordName(t)} \u00b7 open chord`, fallback: false };
+    const v = nearestVoicing(t, set, 0, [0, 1, 2]);
+    return { voicing: v, title: `${chordName(t)} \u00b7 ${INV_SHORT[v.inversion]}`, fallback: true };
+  });
+}
+
 /** Label for the Nth of `total` voicings of a progression (1-3, low to high on the neck). */
 export function positionLabel(i: number, total: number): string {
   if (total <= 1) return 'Voicing';

@@ -109,6 +109,29 @@ function progressionStringsPicker(): string {
   </div>`;
 }
 
+/**
+ * Radio pills choosing which shapes the progression explorer voices with.
+ * "Near the nut" and "Open chords" deliberately ignore the level picker:
+ * both are about staying in the open area, which a root-position-only
+ * chain cannot always do.
+ */
+function progressionShapesPicker(): string {
+  const options: [string, string, string, boolean][] = [
+    ['neck', 'Triads along the neck', 'up to 3 positions', true],
+    ['nut', 'Near the nut', 'lowest triads', false],
+    ['open', 'Open chords', 'the shapes you already know', false],
+  ];
+  const pills = options
+    .map(([value, label, hint, checked]) =>
+      `<label><input type="radio" name="pshapes" value="${value}"${checked ? ' checked' : ''}>
+        ${label} <em>(${hint})</em></label>`)
+    .join('');
+  return `<div class="level-picker">
+    <span class="level-label">\u25c9 Shapes:</span>
+    <div class="level-options" role="radiogroup" aria-label="Shapes for the progressions">${pills}</div>
+  </div>`;
+}
+
 function chapterPage(method: Method, index: number): string {
   const c = method.chapters[index];
   const prev = index > 0 ? method.chapters[index - 1] : null;
@@ -128,6 +151,7 @@ function chapterPage(method: Method, index: number): string {
     ${hasKeyedFigures ? keyPicker() : ''}
     ${hasSongFigures || hasProgressionExplorer ? levelPicker(hasRecordings ? 'As recorded' : 'All inversions') : ''}
     ${hasCircleDrill ? stringsPicker() : ''}
+    ${hasProgressionExplorer ? progressionShapesPicker() : ''}
     ${hasProgressionExplorer ? progressionStringsPicker() : ''}
     ${c.intro ? `<p class="chapter-intro">${c.intro}</p>` : ''}
     ${c.blocks.map(b => renderBlock(b, { interactive: true })).join('\n')}
@@ -347,6 +371,15 @@ main { max-width: 1010px; margin: 0 auto; padding: 40px 22px 60px; }
 #explorer-keysong, .keysong {
   font-size: 14.5px; font-weight: 700; color: var(--accent);
   margin-top: 8px;
+}
+
+/* A chord with no standard open shape: shown as a triad, marked as such. */
+.diagram-cell.no-open-shape {
+  border-style: dashed; border-color: var(--faded);
+}
+.shape-note {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13.5px; color: var(--faded); margin: 10px 0 0;
 }
 
 .adapted-badge {
