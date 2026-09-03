@@ -12,8 +12,12 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": "22.x"
+  },
   "devDependencies": {
     "@types/node": "^26.1.2",
+    "esbuild": "^0.28.1",
     "tsx": "^4.23.9",
     "typescript": "^7.0.2"
   },
